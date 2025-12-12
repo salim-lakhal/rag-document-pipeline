@@ -120,6 +120,9 @@ Document Input → Document Type Detection → Processor Selection
                                       jsonl_ready = True
 ```
 
+## Architecture Schema
+<img width="2816" height="1536" alt="Architecture Schema" src="https://github.com/user-attachments/assets/63d7bb09-0e65-4e52-8668-3ba2d8342abf" />
+
 ---
 
 ## Prerequisites
