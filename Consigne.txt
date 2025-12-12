@@ -355,4 +355,65 @@ Track status for each document: jsonl_ready, embedding_done.
 Metadata-rich JSONL ensures high-quality RAG performance later.
 GDrive/DB/jsonl/<document_id>.jsonl
 
+Quick Note for Claude – URL Handling in Pipeline
 
+Metadata line check:
+
+For each new document, read document_type from metadata.
+
+If document_type = "url" → treat as online document.
+
+Fetch & cache HTML:
+
+Download the webpage from source_url.
+
+Save as HTML in Drive folder:
+
+GDrive/DB/html/<document_id>.html
+
+
+Update drive_link in metadata to point to the saved HTML file.
+
+Process HTML like local file:
+
+Run the HTML processor script on the cached HTML file.
+
+Extract text, clean, chunk (~500 words with 50-word overlap), attach metadata.
+
+Generate per-document JSONL in GDrive/DB/jsonl/<document_id>.jsonl.
+
+Logging / Status:
+
+After processing, mark jsonl_ready = True, embedding_done = False.
+
+Keep source_url in metadata for reference.
+
+Comprehensive messages:
+
+At each significant step or advancement in the project, create a commit with a clear, descriptive message explaining exactly what was done.
+
+Examples:
+
+Added PDF extraction script with basic text cleaning
+
+Implemented HTML processor with section-aware chunking
+
+Generated per-document JSONL with metadata attachment
+
+Added URL fetching and caching logic
+
+Do not include co-author tags:
+
+Avoid lines like Co-authored-by: Claude in commit messages.
+
+Keep messages clean, readable, and human-friendly.
+
+Frequency:
+
+Commit after each meaningful addition or pipeline step (script, folder structure, metadata update).
+
+This ensures version tracking and easy rollback if needed.
+
+Optional:
+
+Include metadata field updates in commit message if relevant, e.g., “Added authority_score and language to JSONL chunks.”
