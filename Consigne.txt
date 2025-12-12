@@ -1,0 +1,358 @@
+RAG Pipeline Project for Foreign Students – Documentation
+
+1. Overview
+This project aims to build a RAG (Retrieval-Augmented Generation) pipeline for foreign student documents (legal, visa, immigration, aid, etc.). The focus is on per-document processing, metadata management, JSONL generation, and Google Drive integration.
+Raw documents are stored on Google Drive.
+
+
+Processing generates per-document JSONL chunks.
+
+
+Embeddings and Vector DB ingestion will be handled later.
+
+
+Project goals:
+- Maintain a clean folder architecture in Google Drive for raw documents, JSONL chunks, and metadata.
+- Automate the pipeline from document collection → chunking → metadata addition → JSONL creation.
+- Use subagents efficiently to parallelize and optimize tasks, without unnecessary imports.
+- Allow per-document processing via metadata JSON lines (one line per document).
+
+
+2. Google Drive Folder Structure
+GDrive/
+└─ DB/
+   ├─ pdfs/           # Raw PDF files
+   ├─ html/           # Raw HTML files if any
+   ├─ jsonl/          # Per-document JSONL chunks ready for embedding
+   └─ meta/           # Metadata JSON/CSV linking documents to source URLs, Drive links, category, date, jurisdiction, authority_score
+
+Each document has a unique document_id.
+
+
+JSONL chunks are stored in GDrive/DB/jsonl/<document_id>.jsonl.
+
+
+Status tracking per document:
+
+
+{
+    "jsonl_ready": true,
+    "embedding_done": false
+}
+
+
+
+3. Metadata Format
+Each line/object in metadata.json or CSV includes:
+{
+  "document_id": "pref92_visa2025",
+  "document_type": "pdf",         // "html" or "url"
+  "drive_link": "https://drive.google.com/...",
+  "source_url": "https://prefecture92.gouv.fr/visa-renewal",
+  "category": "titre_sejour",
+  "sub_category": "delai_renouvellement",
+  "jurisdiction": "Hauts-de-Seine",
+  "date": "2025-01-10",
+  "authority_score": 3,
+  "language": "fr"
+}
+
+Notes:
+document_type indicates how the pipeline reads the document.
+
+
+drive_link allows automatic download from Drive.
+
+
+Metadata fields will be attached to each JSONL chunk (chunk_id, page_start, page_end, chunk_size).
+
+
+
+4. Pipeline Workflow (Per-Document)
+Fetch / Read Document
+
+
+Document_Type
+Method
+PDF
+Download from Drive → parse with pdfplumber or PyMuPDF
+HTML
+Download from Drive or fetch URL → parse with BeautifulSoup
+URL
+Fetch online → parse HTML → extract main content
+
+
+Text Extraction & Preprocessing
+
+
+Remove boilerplate (headers, footers, repeated info)
+
+
+Normalize whitespace, remove special characters if needed
+
+
+Handle multiple languages (detect and tag)
+
+
+Optionally OCR PDFs if text not selectable (pytesseract + pdf2image)
+
+
+Cleaning / Preprocessing
+
+
+Remove irrelevant sections (ads, navigation, menus)
+
+
+Standardize date formats
+
+
+Normalize punctuation and encoding
+
+
+Remove duplicated paragraphs across pages
+
+
+Optional: lowercase, strip HTML tags, remove scripts/styles
+
+
+Chunking
+
+
+Split text into chunks of ~500 words (configurable and logic chunks Try to split along logical sections (paragraphs, headers) rather than mid-sentence.)
+
+
+Align with logical sections (do not cut mid-sentence or mid-paragraph)
+
+
+Assign chunk_id, page_start, page_end, chunk_size metadata
+Include ~50 words overlap between consecutive chunks. Why: ensures context continuity, so the LLM doesn’t miss information that spans across chunk boundaries.
+
+
+Metadata Attachment
+
+
+Each chunk inherits all document metadata:
+
+
+document_id, category, sub_category, jurisdiction, source_url, drive_link, language, authority_score
+
+
+Add chunk-specific fields:
+Metadata per chunk (must-have for performant RAG)
+document_id → to link chunk to source
+
+
+chunk_id → unique identifier per chunk
+
+
+text → chunk text
+
+
+category / sub_category → topic of the document
+
+
+jurisdiction → regional info
+
+
+source_url / drive_link → origin of document
+
+
+date → document date
+
+
+authority_score → weight of reliability
+
+
+language → language of text
+
+
+page_start / page_end → PDF page info
+
+
+chunk_size → number of words in chunk
+
+
+Optional: section_header or heading if text contains structured sections
+
+
+This allows vector search + filtering by category, authority, language, etc., for high-quality RAG retrieval.
+
+
+chunk_id, page_start, page_end, chunk_size
+
+
+JSONL Generation
+
+
+One line per chunk in a JSONL file:
+
+
+{
+  "chunk_id": "pref92_visa2025_001",
+  "text": "Full text of the chunk here...",
+  "document_id": "pref92_visa2025",
+  "category": "titre_sejour",
+  "sub_category": "delai_renouvellement",
+  "jurisdiction": "Hauts-de-Seine",
+  "source_url": "https://prefecture92.gouv.fr/visa-renewal",
+  "drive_link": "https://drive.google.com/...",
+  "language": "fr",
+  "authority_score": 3,
+  "page_start": 1,
+  "page_end": 2,
+  "chunk_size": 480
+}
+
+
+Logging
+
+
+Log jsonl_ready = True, embedding_done = False
+
+
+Store log in Drive or in a local tracking file for pipeline verification
+JSONL Storage
+Per-document JSONL: each chunk as one line.
+
+
+Example with chevauchement:
+
+
+{ "chunk_id": "pref92_visa2025_001", "text": "First 500 words of document...", "document_id": "pref92_visa2025", "category": "titre_sejour", "sub_category": "delai_renouvellement", "jurisdiction": "Hauts-de-Seine", "source_url": "https://prefecture92.gouv.fr/visa-renewal", "drive_link": "https://drive.google.com/...", "language": "fr", "authority_score": 3, "page_start": 1, "page_end": 2, "chunk_size": 500, "overlap_prev": 50 } 
+
+
+Other Considerations for Ultra-Performant RAG
+Vector DB metadata → include all chunk metadata as fields for filtering and relevance boosting.
+
+
+Reranking → optionally rerank results from similarity search based on authority_score, category, or recency.
+
+
+Chunk-level indexing → ensures retrieval granularity and prevents LLM hallucinations.
+
+
+Language-specific embeddings → if docs are multilingual, make sure embedding model handles all languages.
+
+
+Traceability → keep drive_link and page_start for audit and referencing.
+
+
+Incremental updates → new docs produce new JSONL chunks without recomputing existing ones.
+
+
+
+
+4. **Subagent usage**:
+   - Use the most relevant subagents to parallelize tasks:
+       - `data-engineer`, `nlp-engineer`, `python-pro` → pipeline automation
+       - `database-administrator`, `postgres-pro` → Vector DB handling
+       - `workflow-orchestrator`, `task-distributor`, `multi-agent-coordinator` → parallelization
+       - `documentation-engineer` → README/usage generation
+       - Optional: `legal-advisor` → verify official/legal documents
+   - Do **not import unnecessary subagents**
+   - Explicitly notify whenever a subagent is invoked:  
+     Example: "🔧 Using subagent: python-pro → Reason: parsing PDF and cleaning text"
+
+5. **Project-level subagent registration**:
+   - Import relevant subagents from global installation (`~/.claude/agents/`) into `.claude/agents/` for project scope
+   - Register them to automatically trigger for relevant tasks
+
+
+6. GDrive Integration
+Credentials stored in .env:
+
+
+GOOGLE_DRIVE_CLIENT_ID=...
+GOOGLE_DRIVE_CLIENT_SECRET=...
+GOOGLE_DRIVE_REFRESH_TOKEN=...
+
+Pipeline fetches documents automatically using drive_link from metadata JSON.
+
+
+No local storage of raw documents; everything is processed from Drive directly.
+
+
+
+7. Script Development Guidelines
+Separate scripts for each document type:
+
+
+pdf_processor.py
+
+
+html_processor.py
+
+
+url_processor.py
+
+
+Shared utilities:
+
+
+text_cleaning.py → text normalization, deduplication, boilerplate removal
+
+
+chunking.py → chunk text and attach metadata
+
+
+jsonl_writer.py → create per-document JSONL
+
+
+Pipeline orchestrator script:
+
+
+Reads new line from metadata JSON
+
+
+Detects document type
+
+
+Invokes the appropriate processor
+
+
+Runs cleaning, chunking, metadata attachment
+
+
+Writes JSONL to GDrive/DB/jsonl/
+
+
+Updates jsonl_ready = True in metadata
+
+
+
+8. Business Workflow
+Upload PDF/HTML or provide URL in Google Drive.
+
+
+Add one line/object to metadata.json or CSV with all required metadata.
+
+
+Run pipeline per document → JSONL generated.
+
+
+Validate chunks in JSONL.
+
+
+Later: embeddings calculation + Vector DB ingestion → RAG ready.
+Store locally (as a duplicate ) : 
+- GDrive/DB/jsonl/ → per-document JSONL chunks ready for future embedding - GDrive/DB/meta/ → metadata CSV/JSON linking documents to source URLs, Drive links, category, date, jurisdiction, authority_score - Log status for each document (jsonl_ready = True, embedding_done = False) - Include all necessary metadata fields for each chunk
+
+
+
+9. Optimization & Best Practices
+Per-document JSONL generation allows validation and incremental updates.
+
+
+All raw files remain in Drive to save local storage.
+
+
+Parallelize where possible using subagents.
+
+
+Track status for each document: jsonl_ready, embedding_done.
+
+
+Metadata-rich JSONL ensures high-quality RAG performance later.
+GDrive/DB/jsonl/<document_id>.jsonl
+
+

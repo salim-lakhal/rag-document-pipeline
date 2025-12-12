@@ -1,0 +1,30 @@
+[
+  {
+    "document_id": "pref92_visa2025",
+    "document_type": "pdf",
+    "drive_link": "https://drive.google.com/file/d/1ABC123xyz456/view",
+    "source_url": "https://prefecture92.gouv.fr/visa-renewal",
+    "category": "titre_sejour",
+    "sub_category": "delai_renouvellement",
+    "jurisdiction": "Hauts-de-Seine",
+    "date": "2025-01-10",
+    "authority_score": 3,
+    "language": "fr",
+    "jsonl_ready": false,
+    "embedding_done": false
+  },
+  {
+    "document_id": "ofii_accueil_etudiants",
+    "document_type": "html",
+    "drive_link": "https://drive.google.com/file/d/1DEF789abc012/view",
+    "source_url": "https://www.ofii.fr/accueil-etudiants-etrangers",
+    "category": "aide_sociale",
+    "sub_category": "accompagnement_integration",
+    "jurisdiction": "National",
+    "date": "2024-12-01",
+    "authority_score": 4,
+    "language": "fr",
+    "jsonl_ready": false,
+    "embedding_done": false
+  }
+]

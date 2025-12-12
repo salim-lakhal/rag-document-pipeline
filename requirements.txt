@@ -1,0 +1,24 @@
+# PDF Processing
+pdfplumber
+PyMuPDF
+pytesseract
+pdf2image
+
+# HTML/Web Processing
+beautifulsoup4
+lxml
+trafilatura
+readability-lxml
+
+# Language Detection
+langdetect
+
+# Google Drive API
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
+
+# Configuration & Utilities
+python-dotenv
+requests

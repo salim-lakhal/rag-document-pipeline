@@ -1,0 +1,21 @@
+# Document Processors Requirements
+# Install with: pip install -r requirements.txt
+
+# PDF Processing
+pdfplumber>=0.11.0          # PDF text extraction
+pdf2image>=1.17.0           # PDF to image conversion for OCR
+pytesseract>=0.3.10         # OCR engine wrapper
+Pillow>=10.0.0              # Image processing
+
+# HTML Processing
+beautifulsoup4>=4.12.0      # HTML parsing
+lxml>=5.0.0                 # Fast HTML/XML parser
+
+# URL Processing
+requests>=2.31.0            # HTTP library
+trafilatura>=1.10.0         # Web content extraction
+readability-lxml>=0.8.1     # Article extraction
+aiohttp>=3.9.0              # Async HTTP client
+
+# Utilities
+typing-extensions>=4.8.0    # Enhanced type hints

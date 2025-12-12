@@ -1,0 +1,57 @@
+[
+  {
+    "document_id": "pref92_visa2025",
+    "document_type": "pdf",
+    "drive_link": "https://drive.google.com/file/d/1abc123xyz/view",
+    "source_url": "https://prefecture92.gouv.fr/visa-renewal",
+    "category": "titre_sejour",
+    "sub_category": "delai_renouvellement",
+    "jurisdiction": "Hauts-de-Seine",
+    "date": "2025-01-10",
+    "authority_score": 3,
+    "language": "fr",
+    "jsonl_ready": false,
+    "embedding_done": false
+  },
+  {
+    "document_id": "ofii_welcome_guide",
+    "document_type": "pdf",
+    "drive_link": "https://drive.google.com/file/d/1def456uvw/view",
+    "source_url": "https://www.ofii.fr/accueil-integration",
+    "category": "integration",
+    "sub_category": "guide_accueil",
+    "jurisdiction": "National",
+    "date": "2024-09-15",
+    "authority_score": 5,
+    "language": "fr",
+    "jsonl_ready": false,
+    "embedding_done": false
+  },
+  {
+    "document_id": "campus_france_procedures",
+    "document_type": "html",
+    "drive_link": "https://drive.google.com/file/d/1ghi789rst/view",
+    "source_url": "https://www.campusfrance.org/fr/procedures",
+    "category": "etudes",
+    "sub_category": "inscription",
+    "jurisdiction": "National",
+    "date": "2024-11-20",
+    "authority_score": 4,
+    "language": "fr",
+    "jsonl_ready": false,
+    "embedding_done": false
+  },
+  {
+    "document_id": "service_public_sejour",
+    "document_type": "url",
+    "source_url": "https://www.service-public.fr/particuliers/vosdroits/F2209",
+    "category": "titre_sejour",
+    "sub_category": "carte_sejour_temporaire",
+    "jurisdiction": "National",
+    "date": "2024-12-01",
+    "authority_score": 5,
+    "language": "fr",
+    "jsonl_ready": false,
+    "embedding_done": false
+  }
+]
