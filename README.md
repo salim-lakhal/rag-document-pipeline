@@ -6,6 +6,12 @@
 
 Production-ready RAG preprocessing pipeline that extracts text from PDFs, HTML files, and web URLs, then transforms it into metadata-enriched JSONL chunks optimized for vector database ingestion and LLM retrieval.
 
+## Demo
+
+[![Demo](assets/demo.gif)](https://github.com/salim-lakhal/rag-document-pipeline/releases/download/v1.0/demo.mp4)
+
+> *Click GIF to watch full quality video*
+
 ## Architecture
 
 ```mermaid
