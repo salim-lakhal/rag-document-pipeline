@@ -57,6 +57,10 @@ dev = [
     "mypy>=1.8.0",
 ]
 
+[tool.setuptools.packages.find]
+include = ["processors*", "utils*", "scripts*"]
+exclude = ["tests*", "data*"]
+
 [project.scripts]
 rag-pipeline = "scripts.pipeline_orchestrator:main"
 
