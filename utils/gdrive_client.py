@@ -34,26 +34,31 @@ logger = logging.getLogger(__name__)
 
 class GDriveClientError(Exception):
     """Base exception for GDrive Client errors."""
+
     pass
 
 
 class InvalidDriveLinkError(GDriveClientError):
     """Raised when a Drive link is invalid or malformed."""
+
     pass
 
 
 class FileDownloadError(GDriveClientError):
     """Raised when file download fails."""
+
     pass
 
 
 class FileUploadError(GDriveClientError):
     """Raised when file upload fails."""
+
     pass
 
 
 class AuthenticationError(GDriveClientError):
     """Raised when authentication fails."""
+
     pass
 
 
@@ -78,7 +83,7 @@ class GDriveClient:
     """
 
     # Scopes required for Drive operations
-    SCOPES = ['https://www.googleapis.com/auth/drive']
+    SCOPES = ["https://www.googleapis.com/auth/drive"]
 
     def __init__(self, credentials_file: str | None = None) -> None:
         """
@@ -101,12 +106,10 @@ class GDriveClient:
 
         try:
             self._authenticate(credentials_file)
-            self.service = build('drive', 'v3', credentials=self.credentials)
+            self.service = build("drive", "v3", credentials=self.credentials)
             logger.info("Google Drive client initialized successfully")
         except Exception as e:
-            raise AuthenticationError(
-                f"Failed to initialize Google Drive client: {str(e)}"
-            ) from e
+            raise AuthenticationError(f"Failed to initialize Google Drive client: {str(e)}") from e
 
     def _authenticate(self, credentials_file: str | None = None) -> None:
         """
@@ -122,6 +125,7 @@ class GDriveClient:
             # Load from file if provided
             try:
                 from google.oauth2 import service_account
+
                 self.credentials = service_account.Credentials.from_service_account_file(
                     credentials_file, scopes=self.SCOPES
                 )
@@ -130,9 +134,9 @@ class GDriveClient:
                 logger.warning(f"Failed to load credentials from file: {e}")
 
         # Load from environment variables
-        client_id = os.getenv('GOOGLE_DRIVE_CLIENT_ID')
-        client_secret = os.getenv('GOOGLE_DRIVE_CLIENT_SECRET')
-        refresh_token = os.getenv('GOOGLE_DRIVE_REFRESH_TOKEN')
+        client_id = os.getenv("GOOGLE_DRIVE_CLIENT_ID")
+        client_secret = os.getenv("GOOGLE_DRIVE_CLIENT_SECRET")
+        refresh_token = os.getenv("GOOGLE_DRIVE_REFRESH_TOKEN")
 
         if not all([client_id, client_secret, refresh_token]):
             raise AuthenticationError(
@@ -148,7 +152,7 @@ class GDriveClient:
             token_uri="https://oauth2.googleapis.com/token",
             client_id=client_id,
             client_secret=client_secret,
-            scopes=self.SCOPES
+            scopes=self.SCOPES,
         )
 
         # Refresh the token if needed
@@ -156,9 +160,7 @@ class GDriveClient:
             try:
                 self.credentials.refresh(Request())
             except Exception as e:
-                raise AuthenticationError(
-                    f"Failed to refresh credentials: {str(e)}"
-                ) from e
+                raise AuthenticationError(f"Failed to refresh credentials: {str(e)}") from e
 
     def get_file_id_from_link(self, drive_link: str) -> str:
         """
@@ -190,24 +192,22 @@ class GDriveClient:
             raise InvalidDriveLinkError("Drive link cannot be empty")
 
         # Pattern 1: /file/d/FILE_ID/ or /document/d/FILE_ID/
-        pattern1 = r'/(?:file|document|presentation|spreadsheets)/d/([a-zA-Z0-9_-]+)'
+        pattern1 = r"/(?:file|document|presentation|spreadsheets)/d/([a-zA-Z0-9_-]+)"
         match = re.search(pattern1, drive_link)
         if match:
             return match.group(1)
 
         # Pattern 2: ?id=FILE_ID or &id=FILE_ID
-        pattern2 = r'[?&]id=([a-zA-Z0-9_-]+)'
+        pattern2 = r"[?&]id=([a-zA-Z0-9_-]+)"
         match = re.search(pattern2, drive_link)
         if match:
             return match.group(1)
 
         # Pattern 3: Direct file ID (already extracted)
-        if re.match(r'^[a-zA-Z0-9_-]+$', drive_link):
+        if re.match(r"^[a-zA-Z0-9_-]+$", drive_link):
             return drive_link
 
-        raise InvalidDriveLinkError(
-            f"Unable to extract file ID from link: {drive_link}"
-        )
+        raise InvalidDriveLinkError(f"Unable to extract file ID from link: {drive_link}")
 
     def download_file(self, drive_link: str, output_path: str) -> str:
         """
@@ -240,20 +240,16 @@ class GDriveClient:
             output_path.parent.mkdir(parents=True, exist_ok=True)
 
             # Request file metadata to get filename if needed
-            file_metadata = self.service.files().get(
-                fileId=file_id,
-                fields='name, mimeType'
-            ).execute()
-
-            logger.info(
-                f"Downloading file: {file_metadata.get('name')} "
-                f"(ID: {file_id})"
+            file_metadata = (
+                self.service.files().get(fileId=file_id, fields="name, mimeType").execute()
             )
+
+            logger.info(f"Downloading file: {file_metadata.get('name')} (ID: {file_id})")
 
             # Download the file
             request = self.service.files().get_media(fileId=file_id)
 
-            with open(output_path, 'wb') as fh:
+            with open(output_path, "wb") as fh:
                 downloader = MediaIoBaseDownload(fh, request)
                 done = False
                 while not done:
@@ -272,15 +268,10 @@ class GDriveClient:
                 f"HTTP error downloading file: {e.resp.status} - {e.error_details}"
             ) from e
         except Exception as e:
-            raise FileDownloadError(
-                f"Failed to download file from Drive: {str(e)}"
-            ) from e
+            raise FileDownloadError(f"Failed to download file from Drive: {str(e)}") from e
 
     def upload_file(
-        self,
-        file_path: str,
-        drive_folder_id: str | None = None,
-        file_name: str | None = None
+        self, file_path: str, drive_folder_id: str | None = None, file_name: str | None = None
     ) -> str:
         """
         Upload a file to Google Drive.
@@ -318,31 +309,26 @@ class GDriveClient:
             name = file_name or file_path.name
 
             # Prepare file metadata
-            file_metadata = {'name': name}
+            file_metadata = {"name": name}
             if drive_folder_id:
-                file_metadata['parents'] = [drive_folder_id]
+                file_metadata["parents"] = [drive_folder_id]
 
             # Create media upload
-            media = MediaFileUpload(
-                str(file_path),
-                resumable=True
-            )
+            media = MediaFileUpload(str(file_path), resumable=True)
 
             logger.info(f"Uploading file: {name} ({file_path.stat().st_size} bytes)")
 
             # Upload file
-            file = self.service.files().create(
-                body=file_metadata,
-                media_body=media,
-                fields='id, name, webViewLink'
-            ).execute()
-
-            file_id = file.get('id')
-            web_link = file.get('webViewLink', 'N/A')
-
-            logger.info(
-                f"File uploaded successfully - ID: {file_id}, Link: {web_link}"
+            file = (
+                self.service.files()
+                .create(body=file_metadata, media_body=media, fields="id, name, webViewLink")
+                .execute()
             )
+
+            file_id = file.get("id")
+            web_link = file.get("webViewLink", "N/A")
+
+            logger.info(f"File uploaded successfully - ID: {file_id}, Link: {web_link}")
 
             return file_id
 
@@ -353,9 +339,7 @@ class GDriveClient:
                 f"HTTP error uploading file: {e.resp.status} - {e.error_details}"
             ) from e
         except Exception as e:
-            raise FileUploadError(
-                f"Failed to upload file to Drive: {str(e)}"
-            ) from e
+            raise FileUploadError(f"Failed to upload file to Drive: {str(e)}") from e
 
     def get_file_metadata(self, file_id: str) -> dict:
         """
@@ -376,10 +360,14 @@ class GDriveClient:
             >>> print(metadata['name'], metadata['mimeType'])
         """
         try:
-            file_metadata = self.service.files().get(
-                fileId=file_id,
-                fields='id, name, mimeType, size, createdTime, modifiedTime, webViewLink'
-            ).execute()
+            file_metadata = (
+                self.service.files()
+                .get(
+                    fileId=file_id,
+                    fields="id, name, mimeType, size, createdTime, modifiedTime, webViewLink",
+                )
+                .execute()
+            )
 
             return file_metadata
 
@@ -388,6 +376,4 @@ class GDriveClient:
                 f"Failed to get file metadata: {e.resp.status} - {e.error_details}"
             ) from e
         except Exception as e:
-            raise GDriveClientError(
-                f"Error retrieving file metadata: {str(e)}"
-            ) from e
+            raise GDriveClientError(f"Error retrieving file metadata: {str(e)}") from e

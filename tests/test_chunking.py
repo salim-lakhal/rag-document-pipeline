@@ -144,8 +144,22 @@ class TestChunkByParagraphs:
 class TestMergeSmallChunks:
     def test_merges_small_with_next(self):
         chunks = [
-            {"text": "tiny", "word_count": 1, "char_count": 4, "start_pos": 0, "end_pos": 4, "chunk_id": "a"},
-            {"text": " ".join(["word"] * 60), "word_count": 60, "char_count": 300, "start_pos": 5, "end_pos": 305, "chunk_id": "b"},
+            {
+                "text": "tiny",
+                "word_count": 1,
+                "char_count": 4,
+                "start_pos": 0,
+                "end_pos": 4,
+                "chunk_id": "a",
+            },
+            {
+                "text": " ".join(["word"] * 60),
+                "word_count": 60,
+                "char_count": 300,
+                "start_pos": 5,
+                "end_pos": 305,
+                "chunk_id": "b",
+            },
         ]
         merged = merge_small_chunks(chunks, min_size=10)
         assert len(merged) == 1
@@ -153,8 +167,22 @@ class TestMergeSmallChunks:
 
     def test_keeps_large_chunks(self):
         chunks = [
-            {"text": " ".join(["w"] * 100), "word_count": 100, "char_count": 200, "start_pos": 0, "end_pos": 200, "chunk_id": "a"},
-            {"text": " ".join(["w"] * 100), "word_count": 100, "char_count": 200, "start_pos": 201, "end_pos": 401, "chunk_id": "b"},
+            {
+                "text": " ".join(["w"] * 100),
+                "word_count": 100,
+                "char_count": 200,
+                "start_pos": 0,
+                "end_pos": 200,
+                "chunk_id": "a",
+            },
+            {
+                "text": " ".join(["w"] * 100),
+                "word_count": 100,
+                "char_count": 200,
+                "start_pos": 201,
+                "end_pos": 401,
+                "chunk_id": "b",
+            },
         ]
         merged = merge_small_chunks(chunks, min_size=50)
         assert len(merged) == 2

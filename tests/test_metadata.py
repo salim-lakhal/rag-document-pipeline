@@ -216,7 +216,10 @@ class TestSaveAndReload:
 
     def test_save_creates_backup(self, manager, metadata_file):
         manager.save(backup=True)
-        assert Path(metadata_file + ".bak").exists() or Path(metadata_file.replace(".json", ".json.bak")).exists()
+        assert (
+            Path(metadata_file + ".bak").exists()
+            or Path(metadata_file.replace(".json", ".json.bak")).exists()
+        )
 
 
 class TestStatistics:

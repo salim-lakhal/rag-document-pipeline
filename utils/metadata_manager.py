@@ -24,21 +24,25 @@ logger = logging.getLogger(__name__)
 
 class MetadataError(Exception):
     """Base exception for Metadata Manager errors."""
+
     pass
 
 
 class MetadataFileNotFoundError(MetadataError):
     """Raised when metadata file doesn't exist."""
+
     pass
 
 
 class MetadataValidationError(MetadataError):
     """Raised when metadata validation fails."""
+
     pass
 
 
 class DocumentNotFoundError(MetadataError):
     """Raised when a document is not found in metadata."""
+
     pass
 
 
@@ -70,17 +74,24 @@ class MetadataManager:
 
     # Required fields for document metadata
     REQUIRED_FIELDS = {
-        'document_id', 'document_type', 'drive_link', 'source_url',
-        'category', 'jurisdiction', 'date', 'authority_score', 'language'
+        "document_id",
+        "document_type",
+        "drive_link",
+        "source_url",
+        "category",
+        "jurisdiction",
+        "date",
+        "authority_score",
+        "language",
     }
 
     # Optional fields with defaults
     OPTIONAL_FIELDS = {
-        'sub_category': None,
-        'jsonl_ready': False,
-        'embedding_done': False,
-        'processed_date': None,
-        'chunk_count': 0
+        "sub_category": None,
+        "jsonl_ready": False,
+        "embedding_done": False,
+        "processed_date": None,
+        "chunk_count": 0,
     }
 
     def __init__(self, metadata_file: str) -> None:
@@ -104,8 +115,7 @@ class MetadataManager:
 
         if not self.metadata_file.exists():
             logger.warning(
-                f"Metadata file not found: {self.metadata_file}. "
-                "Creating new metadata storage."
+                f"Metadata file not found: {self.metadata_file}. Creating new metadata storage."
             )
             # Create parent directory if needed
             self.metadata_file.parent.mkdir(parents=True, exist_ok=True)
@@ -125,7 +135,7 @@ class MetadataManager:
             MetadataError: If file format is invalid
         """
         try:
-            with open(self.metadata_file, encoding='utf-8') as f:
+            with open(self.metadata_file, encoding="utf-8") as f:
                 content = f.read().strip()
 
             if not content:
@@ -141,9 +151,7 @@ class MetadataManager:
                 if isinstance(data, list):
                     self.metadata = data
                     self._is_jsonl = False
-                    logger.info(
-                        f"Loaded {len(self.metadata)} documents from JSON array"
-                    )
+                    logger.info(f"Loaded {len(self.metadata)} documents from JSON array")
                     return
                 elif isinstance(data, dict):
                     # Single document in JSON format
@@ -156,7 +164,7 @@ class MetadataManager:
 
             # Try JSONL format (one JSON object per line)
             self.metadata = []
-            for line_num, line in enumerate(content.split('\n'), 1):
+            for line_num, line in enumerate(content.split("\n"), 1):
                 line = line.strip()
                 if not line:
                     continue
@@ -164,14 +172,10 @@ class MetadataManager:
                     doc = json.loads(line)
                     self.metadata.append(doc)
                 except json.JSONDecodeError as e:
-                    raise MetadataError(
-                        f"Invalid JSON on line {line_num}: {str(e)}"
-                    ) from e
+                    raise MetadataError(f"Invalid JSON on line {line_num}: {str(e)}") from e
 
             self._is_jsonl = True
-            logger.info(
-                f"Loaded {len(self.metadata)} documents from JSONL format"
-            )
+            logger.info(f"Loaded {len(self.metadata)} documents from JSONL format")
 
             # Store last modified time
             self._last_modified = self.metadata_file.stat().st_mtime
@@ -194,33 +198,27 @@ class MetadataManager:
         # Check required fields
         missing_fields = self.REQUIRED_FIELDS - set(document.keys())
         if missing_fields:
-            raise MetadataValidationError(
-                f"Missing required fields: {missing_fields}"
-            )
+            raise MetadataValidationError(f"Missing required fields: {missing_fields}")
 
         # Validate document_id
-        if not document.get('document_id'):
+        if not document.get("document_id"):
             raise MetadataValidationError("document_id cannot be empty")
 
         # Validate document_type
-        valid_types = {'pdf', 'html', 'url'}
-        if document.get('document_type') not in valid_types:
-            raise MetadataValidationError(
-                f"document_type must be one of {valid_types}"
-            )
+        valid_types = {"pdf", "html", "url"}
+        if document.get("document_type") not in valid_types:
+            raise MetadataValidationError(f"document_type must be one of {valid_types}")
 
         # Validate authority_score
-        score = document.get('authority_score')
+        score = document.get("authority_score")
         if not isinstance(score, (int, float)) or not (0 <= score <= 5):
-            raise MetadataValidationError(
-                "authority_score must be a number between 0 and 5"
-            )
+            raise MetadataValidationError("authority_score must be a number between 0 and 5")
 
     @contextmanager
     def _file_lock(self):
         """Context manager for file locking to prevent concurrent writes."""
-        lock_file = self.metadata_file.with_suffix('.lock')
-        f = open(lock_file, 'w')
+        lock_file = self.metadata_file.with_suffix(".lock")
+        f = open(lock_file, "w")
         try:
             fcntl.flock(f.fileno(), fcntl.LOCK_EX)
             yield
@@ -244,10 +242,7 @@ class MetadataManager:
             >>> for doc in pending:
             ...     print(f"- {doc['document_id']}: {doc['category']}")
         """
-        pending = [
-            doc for doc in self.metadata
-            if not doc.get('jsonl_ready', False)
-        ]
+        pending = [doc for doc in self.metadata if not doc.get("jsonl_ready", False)]
 
         logger.info(f"Found {len(pending)} pending documents")
         return deepcopy(pending)
@@ -271,19 +266,17 @@ class MetadataManager:
             >>> print(doc['category'], doc['jurisdiction'])
         """
         for doc in self.metadata:
-            if doc.get('document_id') == document_id:
+            if doc.get("document_id") == document_id:
                 return deepcopy(doc)
 
-        raise DocumentNotFoundError(
-            f"Document not found: {document_id}"
-        )
+        raise DocumentNotFoundError(f"Document not found: {document_id}")
 
     def update_document_status(
         self,
         document_id: str,
         jsonl_ready: bool | None = None,
         embedding_done: bool | None = None,
-        chunk_count: int | None = None
+        chunk_count: int | None = None,
     ) -> None:
         """
         Update processing status for a document.
@@ -310,18 +303,18 @@ class MetadataManager:
         found = False
 
         for doc in self.metadata:
-            if doc.get('document_id') == document_id:
+            if doc.get("document_id") == document_id:
                 # Update status fields
                 if jsonl_ready is not None:
-                    doc['jsonl_ready'] = jsonl_ready
+                    doc["jsonl_ready"] = jsonl_ready
                     if jsonl_ready:
-                        doc['processed_date'] = datetime.now().isoformat()
+                        doc["processed_date"] = datetime.now().isoformat()
 
                 if embedding_done is not None:
-                    doc['embedding_done'] = embedding_done
+                    doc["embedding_done"] = embedding_done
 
                 if chunk_count is not None:
-                    doc['chunk_count'] = chunk_count
+                    doc["chunk_count"] = chunk_count
 
                 found = True
                 logger.info(
@@ -333,9 +326,7 @@ class MetadataManager:
                 break
 
         if not found:
-            raise DocumentNotFoundError(
-                f"Cannot update status: document not found: {document_id}"
-            )
+            raise DocumentNotFoundError(f"Cannot update status: document not found: {document_id}")
 
     def add_document(self, document_metadata: dict[str, Any]) -> None:
         """
@@ -369,9 +360,9 @@ class MetadataManager:
         self._validate_document(document_metadata)
 
         # Check if document already exists
-        document_id = document_metadata['document_id']
+        document_id = document_metadata["document_id"]
         for doc in self.metadata:
-            if doc.get('document_id') == document_id:
+            if doc.get("document_id") == document_id:
                 raise MetadataError(
                     f"Document already exists: {document_id}. "
                     "Use update_document_status() to modify existing documents."
@@ -383,7 +374,7 @@ class MetadataManager:
                 document_metadata[field] = default_value
 
         # Add timestamp
-        document_metadata['added_date'] = datetime.now().isoformat()
+        document_metadata["added_date"] = datetime.now().isoformat()
 
         # Add to metadata
         self.metadata.append(document_metadata)
@@ -406,15 +397,10 @@ class MetadataManager:
             >>> manager.save()
         """
         original_count = len(self.metadata)
-        self.metadata = [
-            doc for doc in self.metadata
-            if doc.get('document_id') != document_id
-        ]
+        self.metadata = [doc for doc in self.metadata if doc.get("document_id") != document_id]
 
         if len(self.metadata) == original_count:
-            raise DocumentNotFoundError(
-                f"Cannot remove: document not found: {document_id}"
-            )
+            raise DocumentNotFoundError(f"Cannot remove: document not found: {document_id}")
 
         logger.info(f"Removed document: {document_id}")
 
@@ -447,10 +433,7 @@ class MetadataManager:
             >>> visa_docs = manager.get_documents_by_category("titre_sejour")
             >>> print(f"Found {len(visa_docs)} titre_sejour documents")
         """
-        docs = [
-            doc for doc in self.metadata
-            if doc.get('category') == category
-        ]
+        docs = [doc for doc in self.metadata if doc.get("category") == category]
         logger.info(f"Found {len(docs)} documents in category: {category}")
         return deepcopy(docs)
 
@@ -468,10 +451,7 @@ class MetadataManager:
             >>> manager = MetadataManager("/data/meta/metadata.json")
             >>> paris_docs = manager.get_documents_by_jurisdiction("Paris")
         """
-        docs = [
-            doc for doc in self.metadata
-            if doc.get('jurisdiction') == jurisdiction
-        ]
+        docs = [doc for doc in self.metadata if doc.get("jurisdiction") == jurisdiction]
         logger.info(f"Found {len(docs)} documents for jurisdiction: {jurisdiction}")
         return deepcopy(docs)
 
@@ -482,11 +462,11 @@ class MetadataManager:
         Args:
             data: List of document metadata to save
         """
-        with open(self.metadata_file, 'w', encoding='utf-8') as f:
+        with open(self.metadata_file, "w", encoding="utf-8") as f:
             if self._is_jsonl:
                 # JSONL format: one JSON object per line
                 for doc in data:
-                    f.write(json.dumps(doc, ensure_ascii=False) + '\n')
+                    f.write(json.dumps(doc, ensure_ascii=False) + "\n")
             else:
                 # JSON array format: pretty-printed for readability
                 json.dump(data, f, ensure_ascii=False, indent=2)
@@ -513,21 +493,17 @@ class MetadataManager:
             with self._file_lock():
                 # Create backup if requested and file exists
                 if backup and self.metadata_file.exists():
-                    backup_file = self.metadata_file.with_suffix('.json.bak')
+                    backup_file = self.metadata_file.with_suffix(".json.bak")
                     backup_file.write_bytes(self.metadata_file.read_bytes())
                     logger.debug(f"Created backup: {backup_file}")
 
                 # Save metadata
                 self._save_to_disk(self.metadata)
 
-                logger.info(
-                    f"Saved {len(self.metadata)} documents to {self.metadata_file}"
-                )
+                logger.info(f"Saved {len(self.metadata)} documents to {self.metadata_file}")
 
         except Exception as e:
-            raise MetadataError(
-                f"Failed to save metadata: {str(e)}"
-            ) from e
+            raise MetadataError(f"Failed to save metadata: {str(e)}") from e
 
     def reload(self) -> None:
         """
@@ -558,25 +534,20 @@ class MetadataManager:
             >>> print(f"Ready: {stats['jsonl_ready_count']}")
         """
         stats = {
-            'total_documents': len(self.metadata),
-            'jsonl_ready_count': sum(
-                1 for doc in self.metadata if doc.get('jsonl_ready', False)
+            "total_documents": len(self.metadata),
+            "jsonl_ready_count": sum(1 for doc in self.metadata if doc.get("jsonl_ready", False)),
+            "embedding_done_count": sum(
+                1 for doc in self.metadata if doc.get("embedding_done", False)
             ),
-            'embedding_done_count': sum(
-                1 for doc in self.metadata if doc.get('embedding_done', False)
+            "pending_documents": sum(
+                1 for doc in self.metadata if not doc.get("jsonl_ready", False)
             ),
-            'pending_documents': sum(
-                1 for doc in self.metadata if not doc.get('jsonl_ready', False)
-            ),
-            'categories': len(set(doc.get('category') for doc in self.metadata)),
-            'jurisdictions': len(set(doc.get('jurisdiction') for doc in self.metadata)),
-            'document_types': {
-                doc_type: sum(
-                    1 for doc in self.metadata
-                    if doc.get('document_type') == doc_type
-                )
-                for doc_type in {'pdf', 'html', 'url'}
-            }
+            "categories": len(set(doc.get("category") for doc in self.metadata)),
+            "jurisdictions": len(set(doc.get("jurisdiction") for doc in self.metadata)),
+            "document_types": {
+                doc_type: sum(1 for doc in self.metadata if doc.get("document_type") == doc_type)
+                for doc_type in {"pdf", "html", "url"}
+            },
         }
 
         return stats

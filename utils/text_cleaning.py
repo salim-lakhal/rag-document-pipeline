@@ -83,16 +83,16 @@ def normalize_whitespace(text: str) -> str:
         return ""
 
     # Replace tabs with spaces
-    text = text.replace('\t', ' ')
+    text = text.replace("\t", " ")
 
     # Normalize line endings (Windows \\r\\n, old Mac \\r, Unix \\n)
-    text = text.replace('\r\n', '\n').replace('\r', '\n')
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
 
     # Remove multiple spaces (but preserve newlines)
-    text = re.sub(r' +', ' ', text)
+    text = re.sub(r" +", " ", text)
 
     # Strip whitespace from each line
-    lines = [line.strip() for line in text.split('\n')]
+    lines = [line.strip() for line in text.split("\n")]
 
     # Collapse multiple blank lines to maximum of 2
     result_lines = []
@@ -108,7 +108,7 @@ def normalize_whitespace(text: str) -> str:
                 result_lines.append(line)
 
     # Join lines and ensure no trailing whitespace
-    normalized = '\n'.join(result_lines).strip()
+    normalized = "\n".join(result_lines).strip()
 
     return normalized
 
@@ -141,35 +141,32 @@ def remove_boilerplate(text: str) -> str:
     # Common boilerplate patterns
     boilerplate_patterns = [
         # Page numbers
-        r'^Page\s+\d+\s+of\s+\d+\s*$',
-        r'^\d+\s*/\s*\d+\s*$',
-        r'^-\s*\d+\s*-\s*$',
-
+        r"^Page\s+\d+\s+of\s+\d+\s*$",
+        r"^\d+\s*/\s*\d+\s*$",
+        r"^-\s*\d+\s*-\s*$",
         # Headers and footers with dates
-        r'^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\s*$',
-        r'^(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),?\s+.*\d{4}\s*$',
-
+        r"^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\s*$",
+        r"^(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),?\s+.*\d{4}\s*$",
         # Document metadata
-        r'^(?:Confidential|Internal|Draft|DRAFT)\s*$',
-        r'^(?:Document|File)\s+(?:ID|Number)[:]\s*\S+\s*$',
-
+        r"^(?:Confidential|Internal|Draft|DRAFT)\s*$",
+        r"^(?:Document|File)\s+(?:ID|Number)[:]\s*\S+\s*$",
         # Common repeated headers
-        r'^={3,}\s*$',
-        r'^-{3,}\s*$',
-        r'^_{3,}\s*$',
-
+        r"^={3,}\s*$",
+        r"^-{3,}\s*$",
+        r"^_{3,}\s*$",
         # Legal boilerplate markers
-        r'^©\s*\d{4}.*$',
-        r'^Copyright\s+©.*$',
-        r'^All rights reserved\.?\s*$',
+        r"^©\s*\d{4}.*$",
+        r"^Copyright\s+©.*$",
+        r"^All rights reserved\.?\s*$",
     ]
 
-    lines = text.split('\n')
+    lines = text.split("\n")
     cleaned_lines = []
 
     # Compile patterns for efficiency
-    compiled_patterns = [re.compile(pattern, re.IGNORECASE | re.MULTILINE)
-                         for pattern in boilerplate_patterns]
+    compiled_patterns = [
+        re.compile(pattern, re.IGNORECASE | re.MULTILINE) for pattern in boilerplate_patterns
+    ]
 
     for line in lines:
         stripped_line = line.strip()
@@ -180,13 +177,12 @@ def remove_boilerplate(text: str) -> str:
             continue
 
         # Check if line matches any boilerplate pattern
-        is_boilerplate = any(pattern.match(stripped_line)
-                            for pattern in compiled_patterns)
+        is_boilerplate = any(pattern.match(stripped_line) for pattern in compiled_patterns)
 
         if not is_boilerplate:
             cleaned_lines.append(line)
 
-    result = '\n'.join(cleaned_lines)
+    result = "\n".join(cleaned_lines)
 
     # Remove repeated identical lines (common in headers/footers)
     result = _remove_repeated_lines(result)
@@ -205,7 +201,7 @@ def _remove_repeated_lines(text: str, min_repetitions: int = 3) -> str:
     Returns:
         Text with repeated lines removed
     """
-    lines = text.split('\n')
+    lines = text.split("\n")
     result_lines = []
     i = 0
 
@@ -214,9 +210,11 @@ def _remove_repeated_lines(text: str, min_repetitions: int = 3) -> str:
 
         # Count consecutive repetitions
         repetitions = 1
-        while (i + repetitions < len(lines) and
-               lines[i + repetitions].strip() == current_line.strip() and
-               current_line.strip()):
+        while (
+            i + repetitions < len(lines)
+            and lines[i + repetitions].strip() == current_line.strip()
+            and current_line.strip()
+        ):
             repetitions += 1
 
         # If line is repeated many times, keep only one instance
@@ -229,7 +227,7 @@ def _remove_repeated_lines(text: str, min_repetitions: int = 3) -> str:
                 result_lines.append(current_line)
             i += repetitions
 
-    return '\n'.join(result_lines)
+    return "\n".join(result_lines)
 
 
 def remove_duplicates(text: str) -> str:
@@ -254,7 +252,7 @@ def remove_duplicates(text: str) -> str:
         return ""
 
     # Split into paragraphs (separated by blank lines)
-    paragraphs = re.split(r'\n\s*\n', text)
+    paragraphs = re.split(r"\n\s*\n", text)
 
     seen = set()
     unique_paragraphs = []
@@ -273,7 +271,7 @@ def remove_duplicates(text: str) -> str:
             unique_paragraphs.append(para.strip())
 
     # Rejoin with double newlines to preserve paragraph structure
-    result = '\n\n'.join(unique_paragraphs)
+    result = "\n\n".join(unique_paragraphs)
 
     logger.debug(f"Removed {len(paragraphs) - len(unique_paragraphs)} duplicate paragraphs")
 
@@ -310,41 +308,65 @@ def standardize_dates(text: str) -> str:
     # Converts to YYYY-MM-DD, attempting DD/MM/YYYY interpretation first
     date_patterns = [
         # DD/MM/YYYY format (European style)
-        (r'\b(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})\b',
-         lambda m: f"{m.group(3)}-{m.group(2).zfill(2)}-{m.group(1).zfill(2)}"),
-
+        (
+            r"\b(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})\b",
+            lambda m: f"{m.group(3)}-{m.group(2).zfill(2)}-{m.group(1).zfill(2)}",
+        ),
         # YYYY/MM/DD format (ISO-like with different separators)
-        (r'\b(\d{4})[/\-.](\d{1,2})[/\-.](\d{1,2})\b',
-         lambda m: f"{m.group(1)}-{m.group(2).zfill(2)}-{m.group(3).zfill(2)}"),
+        (
+            r"\b(\d{4})[/\-.](\d{1,2})[/\-.](\d{1,2})\b",
+            lambda m: f"{m.group(1)}-{m.group(2).zfill(2)}-{m.group(3).zfill(2)}",
+        ),
     ]
 
     # Month name patterns (e.g., "15 March 2024" or "March 15, 2024")
     month_names = {
-        'january': '01', 'jan': '01',
-        'february': '02', 'feb': '02',
-        'march': '03', 'mar': '03',
-        'april': '04', 'apr': '04',
-        'may': '05',
-        'june': '06', 'jun': '06',
-        'july': '07', 'jul': '07',
-        'august': '08', 'aug': '08',
-        'september': '09', 'sep': '09', 'sept': '09',
-        'october': '10', 'oct': '10',
-        'november': '11', 'nov': '11',
-        'december': '12', 'dec': '12',
+        "january": "01",
+        "jan": "01",
+        "february": "02",
+        "feb": "02",
+        "march": "03",
+        "mar": "03",
+        "april": "04",
+        "apr": "04",
+        "may": "05",
+        "june": "06",
+        "jun": "06",
+        "july": "07",
+        "jul": "07",
+        "august": "08",
+        "aug": "08",
+        "september": "09",
+        "sep": "09",
+        "sept": "09",
+        "october": "10",
+        "oct": "10",
+        "november": "11",
+        "nov": "11",
+        "december": "12",
+        "dec": "12",
         # French months
-        'janvier': '01', 'janv': '01',
-        'février': '02', 'fevrier': '02', 'fév': '02', 'fev': '02',
-        'mars': '03',
-        'avril': '04', 'avr': '04',
-        'mai': '05',
-        'juin': '06',
-        'juillet': '07', 'juil': '07',
-        'août': '08', 'aout': '08',
-        'septembre': '09',
-        'octobre': '10',
-        'novembre': '11',
-        'décembre': '12', 'decembre': '12', 'déc': '12',
+        "janvier": "01",
+        "janv": "01",
+        "février": "02",
+        "fevrier": "02",
+        "fév": "02",
+        "fev": "02",
+        "mars": "03",
+        "avril": "04",
+        "avr": "04",
+        "mai": "05",
+        "juin": "06",
+        "juillet": "07",
+        "juil": "07",
+        "août": "08",
+        "aout": "08",
+        "septembre": "09",
+        "octobre": "10",
+        "novembre": "11",
+        "décembre": "12",
+        "decembre": "12",
+        "déc": "12",
     }
 
     # Replace month names with numbers
@@ -352,17 +374,15 @@ def standardize_dates(text: str) -> str:
     for month_name, month_num in month_names.items():
         # Day Month Year (e.g., "15 March 2024")
         pattern1 = re.compile(
-            rf'\b(\d{{1,2}})\s+{re.escape(month_name)}\s+(\d{{4}})\b',
-            re.IGNORECASE
+            rf"\b(\d{{1,2}})\s+{re.escape(month_name)}\s+(\d{{4}})\b", re.IGNORECASE
         )
-        result = pattern1.sub(rf'\2-{month_num}-\1', result)
+        result = pattern1.sub(rf"\2-{month_num}-\1", result)
 
         # Month Day, Year (e.g., "March 15, 2024")
         pattern2 = re.compile(
-            rf'\b{re.escape(month_name)}\s+(\d{{1,2}}),?\s+(\d{{4}})\b',
-            re.IGNORECASE
+            rf"\b{re.escape(month_name)}\s+(\d{{1,2}}),?\s+(\d{{4}})\b", re.IGNORECASE
         )
-        result = pattern2.sub(rf'\2-{month_num}-\1', result)
+        result = pattern2.sub(rf"\2-{month_num}-\1", result)
 
     # Apply numeric date patterns
     for pattern, replacement in date_patterns:
@@ -370,19 +390,13 @@ def standardize_dates(text: str) -> str:
 
     # Ensure all dates have zero-padded days and months
     result = re.sub(
-        r'\b(\d{4})-(\d)-(\d)\b',
-        lambda m: f"{m.group(1)}-0{m.group(2)}-0{m.group(3)}",
-        result
+        r"\b(\d{4})-(\d)-(\d)\b", lambda m: f"{m.group(1)}-0{m.group(2)}-0{m.group(3)}", result
     )
     result = re.sub(
-        r'\b(\d{4})-(\d)-(\d{2})\b',
-        lambda m: f"{m.group(1)}-0{m.group(2)}-{m.group(3)}",
-        result
+        r"\b(\d{4})-(\d)-(\d{2})\b", lambda m: f"{m.group(1)}-0{m.group(2)}-{m.group(3)}", result
     )
     result = re.sub(
-        r'\b(\d{4})-(\d{2})-(\d)\b',
-        lambda m: f"{m.group(1)}-{m.group(2)}-0{m.group(3)}",
-        result
+        r"\b(\d{4})-(\d{2})-(\d)\b", lambda m: f"{m.group(1)}-{m.group(2)}-0{m.group(3)}", result
     )
 
     return result
@@ -462,12 +476,12 @@ if __name__ == "__main__":
 
     print("Original text:")
     print(sample_text)
-    print("\n" + "="*50 + "\n")
+    print("\n" + "=" * 50 + "\n")
 
     cleaned = clean_text(sample_text)
     print("Cleaned text:")
     print(cleaned)
-    print("\n" + "="*50 + "\n")
+    print("\n" + "=" * 50 + "\n")
 
     language = detect_language(cleaned)
     print(f"Detected language: {language}")

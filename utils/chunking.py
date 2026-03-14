@@ -17,10 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 def chunk_text(
-    text: str,
-    chunk_size: int = 500,
-    overlap: int = 50,
-    page_info: dict[str, Any] | None = None
+    text: str, chunk_size: int = 500, overlap: int = 50, page_info: dict[str, Any] | None = None
 ) -> list[dict[str, Any]]:
     """
     Split text into chunks of approximately chunk_size words with overlap.
@@ -85,21 +82,21 @@ def chunk_text(
         # Check if we've reached the target chunk size
         if len(current_chunk_words) >= chunk_size:
             # Create chunk
-            chunk_text = ' '.join(current_chunk_sentences)
+            chunk_text = " ".join(current_chunk_sentences)
             chunk_start_pos = char_position
             chunk_end_pos = chunk_start_pos + len(chunk_text)
 
             chunk_data = {
-                'text': chunk_text,
-                'chunk_id': str(uuid4()),
-                'word_count': len(current_chunk_words),
-                'char_count': len(chunk_text),
-                'start_pos': chunk_start_pos,
-                'end_pos': chunk_end_pos,
+                "text": chunk_text,
+                "chunk_id": str(uuid4()),
+                "word_count": len(current_chunk_words),
+                "char_count": len(chunk_text),
+                "start_pos": chunk_start_pos,
+                "end_pos": chunk_end_pos,
             }
 
             if page_info:
-                chunk_data['page_info'] = page_info
+                chunk_data["page_info"] = page_info
 
             chunks.append(chunk_data)
 
@@ -113,7 +110,7 @@ def chunk_text(
                 overlap_sentences = []
 
                 # Reconstruct sentences from overlap words
-                overlap_text = ' '.join(overlap_words)
+                overlap_text = " ".join(overlap_words)
                 overlap_sentences = [overlap_text]
 
                 current_chunk_words = overlap_words.copy()
@@ -124,21 +121,21 @@ def chunk_text(
 
     # Handle remaining text (last chunk)
     if current_chunk_words:
-        chunk_text = ' '.join(current_chunk_sentences)
+        chunk_text = " ".join(current_chunk_sentences)
         chunk_start_pos = char_position
         chunk_end_pos = chunk_start_pos + len(chunk_text)
 
         chunk_data = {
-            'text': chunk_text,
-            'chunk_id': str(uuid4()),
-            'word_count': len(current_chunk_words),
-            'char_count': len(chunk_text),
-            'start_pos': chunk_start_pos,
-            'end_pos': chunk_end_pos,
+            "text": chunk_text,
+            "chunk_id": str(uuid4()),
+            "word_count": len(current_chunk_words),
+            "char_count": len(chunk_text),
+            "start_pos": chunk_start_pos,
+            "end_pos": chunk_end_pos,
         }
 
         if page_info:
-            chunk_data['page_info'] = page_info
+            chunk_data["page_info"] = page_info
 
         chunks.append(chunk_data)
 
@@ -162,7 +159,7 @@ def _split_into_sentences(text: str) -> list[str]:
     """
     # Pattern for sentence boundaries
     # Looks for . ! ? followed by whitespace and capital letter
-    sentence_pattern = r'(?<=[.!?])\s+(?=[A-Z])'
+    sentence_pattern = r"(?<=[.!?])\s+(?=[A-Z])"
 
     sentences = re.split(sentence_pattern, text)
 
@@ -177,10 +174,7 @@ def _split_into_sentences(text: str) -> list[str]:
 
 
 def create_chunks_with_metadata(
-    text: str,
-    document_metadata: dict[str, Any],
-    chunk_size: int = 500,
-    overlap: int = 50
+    text: str, document_metadata: dict[str, Any], chunk_size: int = 500, overlap: int = 50
 ) -> list[dict[str, Any]]:
     """
     Create chunks with comprehensive metadata for document processing pipelines.
@@ -225,25 +219,20 @@ def create_chunks_with_metadata(
         document_metadata = {}
 
     # Validate required metadata fields
-    if 'document_id' not in document_metadata:
+    if "document_id" not in document_metadata:
         logger.warning("document_id not in metadata, generating one")
-        document_metadata['document_id'] = str(uuid4())
+        document_metadata["document_id"] = str(uuid4())
 
     # Extract page info if available
     page_info = None
-    if 'page_num' in document_metadata or 'page_number' in document_metadata:
+    if "page_num" in document_metadata or "page_number" in document_metadata:
         page_info = {
-            'page_num': document_metadata.get('page_num') or document_metadata.get('page_number'),
-            'total_pages': document_metadata.get('total_pages')
+            "page_num": document_metadata.get("page_num") or document_metadata.get("page_number"),
+            "total_pages": document_metadata.get("total_pages"),
         }
 
     # Create base chunks
-    base_chunks = chunk_text(
-        text=text,
-        chunk_size=chunk_size,
-        overlap=overlap,
-        page_info=page_info
-    )
+    base_chunks = chunk_text(text=text, chunk_size=chunk_size, overlap=overlap, page_info=page_info)
 
     # Enhance chunks with metadata
     total_chunks = len(base_chunks)
@@ -254,23 +243,23 @@ def create_chunks_with_metadata(
         enhanced_chunk = {
             **chunk,  # Include all base chunk fields
             **document_metadata,  # Include all document metadata
-            'chunk_index': index,
-            'total_chunks': total_chunks,
-            'has_next': index < total_chunks - 1,
-            'has_previous': index > 0,
+            "chunk_index": index,
+            "total_chunks": total_chunks,
+            "has_next": index < total_chunks - 1,
+            "has_previous": index > 0,
         }
 
         # Add page range if processing multi-page document
         if page_info:
-            enhanced_chunk['page_start'] = page_info['page_num']
-            enhanced_chunk['page_end'] = page_info['page_num']
+            enhanced_chunk["page_start"] = page_info["page_num"]
+            enhanced_chunk["page_end"] = page_info["page_num"]
 
         # Add relationship information
         if index > 0:
-            enhanced_chunk['previous_chunk_id'] = base_chunks[index - 1]['chunk_id']
+            enhanced_chunk["previous_chunk_id"] = base_chunks[index - 1]["chunk_id"]
 
         if index < total_chunks - 1:
-            enhanced_chunk['next_chunk_id'] = base_chunks[index + 1]['chunk_id']
+            enhanced_chunk["next_chunk_id"] = base_chunks[index + 1]["chunk_id"]
 
         enhanced_chunks.append(enhanced_chunk)
 
@@ -283,9 +272,7 @@ def create_chunks_with_metadata(
 
 
 def chunk_by_paragraphs(
-    text: str,
-    max_chunk_size: int = 500,
-    min_chunk_size: int = 100
+    text: str, max_chunk_size: int = 500, min_chunk_size: int = 100
 ) -> list[dict[str, Any]]:
     """
     Split text into chunks based on paragraph boundaries.
@@ -311,7 +298,7 @@ def chunk_by_paragraphs(
         return []
 
     # Split into paragraphs
-    paragraphs = re.split(r'\n\s*\n', text)
+    paragraphs = re.split(r"\n\s*\n", text)
     paragraphs = [p.strip() for p in paragraphs if p.strip()]
 
     chunks = []
@@ -326,15 +313,17 @@ def chunk_by_paragraphs(
         if para_word_count > max_chunk_size:
             # Save current chunk if exists
             if current_chunk_paras:
-                combined_text = '\n\n'.join(current_chunk_paras)
-                chunks.append({
-                    'text': combined_text,
-                    'chunk_id': str(uuid4()),
-                    'word_count': current_word_count,
-                    'char_count': len(combined_text),
-                    'start_pos': char_position,
-                    'end_pos': char_position + len(combined_text),
-                })
+                combined_text = "\n\n".join(current_chunk_paras)
+                chunks.append(
+                    {
+                        "text": combined_text,
+                        "chunk_id": str(uuid4()),
+                        "word_count": current_word_count,
+                        "char_count": len(combined_text),
+                        "start_pos": char_position,
+                        "end_pos": char_position + len(combined_text),
+                    }
+                )
                 char_position += len(combined_text) + 2
                 current_chunk_paras = []
                 current_word_count = 0
@@ -345,16 +334,21 @@ def chunk_by_paragraphs(
             char_position += len(para) + 2
 
         # If adding paragraph would exceed max_chunk_size, create chunk
-        elif current_word_count + para_word_count > max_chunk_size and current_word_count >= min_chunk_size:
-            combined_text = '\n\n'.join(current_chunk_paras)
-            chunks.append({
-                'text': combined_text,
-                'chunk_id': str(uuid4()),
-                'word_count': current_word_count,
-                'char_count': len(combined_text),
-                'start_pos': char_position,
-                'end_pos': char_position + len(combined_text),
-            })
+        elif (
+            current_word_count + para_word_count > max_chunk_size
+            and current_word_count >= min_chunk_size
+        ):
+            combined_text = "\n\n".join(current_chunk_paras)
+            chunks.append(
+                {
+                    "text": combined_text,
+                    "chunk_id": str(uuid4()),
+                    "word_count": current_word_count,
+                    "char_count": len(combined_text),
+                    "start_pos": char_position,
+                    "end_pos": char_position + len(combined_text),
+                }
+            )
             char_position += len(combined_text) + 2
 
             # Start new chunk with current paragraph
@@ -368,25 +362,24 @@ def chunk_by_paragraphs(
 
     # Handle remaining paragraphs
     if current_chunk_paras:
-        combined_text = '\n\n'.join(current_chunk_paras)
-        chunks.append({
-            'text': combined_text,
-            'chunk_id': str(uuid4()),
-            'word_count': current_word_count,
-            'char_count': len(combined_text),
-            'start_pos': char_position,
-            'end_pos': char_position + len(combined_text),
-        })
+        combined_text = "\n\n".join(current_chunk_paras)
+        chunks.append(
+            {
+                "text": combined_text,
+                "chunk_id": str(uuid4()),
+                "word_count": current_word_count,
+                "char_count": len(combined_text),
+                "start_pos": char_position,
+                "end_pos": char_position + len(combined_text),
+            }
+        )
 
     logger.info(f"Created {len(chunks)} paragraph-based chunks")
 
     return chunks
 
 
-def merge_small_chunks(
-    chunks: list[dict[str, Any]],
-    min_size: int = 50
-) -> list[dict[str, Any]]:
+def merge_small_chunks(chunks: list[dict[str, Any]], min_size: int = 50) -> list[dict[str, Any]]:
     """
     Merge chunks that are smaller than min_size with adjacent chunks.
 
@@ -409,18 +402,18 @@ def merge_small_chunks(
         current_chunk = chunks[i]
 
         # If chunk is too small and not the last chunk
-        if current_chunk['word_count'] < min_size and i < len(chunks) - 1:
+        if current_chunk["word_count"] < min_size and i < len(chunks) - 1:
             # Merge with next chunk
             next_chunk = chunks[i + 1]
-            merged_text = current_chunk['text'] + ' ' + next_chunk['text']
+            merged_text = current_chunk["text"] + " " + next_chunk["text"]
 
             merged_chunk = {
-                'text': merged_text,
-                'chunk_id': str(uuid4()),
-                'word_count': current_chunk['word_count'] + next_chunk['word_count'],
-                'char_count': len(merged_text),
-                'start_pos': current_chunk['start_pos'],
-                'end_pos': next_chunk['end_pos'],
+                "text": merged_text,
+                "chunk_id": str(uuid4()),
+                "word_count": current_chunk["word_count"] + next_chunk["word_count"],
+                "char_count": len(merged_text),
+                "start_pos": current_chunk["start_pos"],
+                "end_pos": next_chunk["end_pos"],
             }
 
             # Preserve other metadata if present
@@ -441,7 +434,8 @@ def merge_small_chunks(
 
 if __name__ == "__main__":
     # Example usage and testing
-    sample_text = """
+    sample_text = (
+        """
     This is the first paragraph. It contains some important information.
 
     This is the second paragraph. It has more details about the topic. We want to ensure
@@ -450,7 +444,9 @@ if __name__ == "__main__":
 
     Here's a third paragraph with additional content. The algorithm should split this
     text into reasonable chunks that maintain semantic coherence.
-    """ * 5
+    """
+        * 5
+    )
 
     print("=" * 60)
     print("BASIC CHUNKING")
@@ -469,15 +465,13 @@ if __name__ == "__main__":
     print("=" * 60)
 
     metadata = {
-        'document_id': 'test_doc_001',
-        'filename': 'sample.txt',
-        'document_type': 'text',
-        'author': 'Test Author'
+        "document_id": "test_doc_001",
+        "filename": "sample.txt",
+        "document_type": "text",
+        "author": "Test Author",
     }
 
-    metadata_chunks = create_chunks_with_metadata(
-        sample_text, metadata, chunk_size=100, overlap=20
-    )
+    metadata_chunks = create_chunks_with_metadata(sample_text, metadata, chunk_size=100, overlap=20)
 
     for i, chunk in enumerate(metadata_chunks[:2]):  # Show first 2
         print(f"\nChunk {i + 1}:")

@@ -18,9 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 def validate_chunk(
-    chunk: dict[str, Any],
-    required_fields: set[str] | None = None,
-    strict: bool = False
+    chunk: dict[str, Any], required_fields: set[str] | None = None, strict: bool = False
 ) -> bool:
     """
     Validate that a chunk dictionary contains required fields.
@@ -55,7 +53,7 @@ def validate_chunk(
 
     # Default required fields
     if required_fields is None:
-        required_fields = {'text', 'chunk_id'}
+        required_fields = {"text", "chunk_id"}
 
     # Check for required fields
     missing_fields = required_fields - set(chunk.keys())
@@ -67,7 +65,7 @@ def validate_chunk(
         return False
 
     # Check that text field is not empty
-    if 'text' in chunk and not chunk['text']:
+    if "text" in chunk and not chunk["text"]:
         error_msg = "Chunk 'text' field cannot be empty"
         logger.warning(error_msg)
         if strict:
@@ -75,7 +73,7 @@ def validate_chunk(
         return False
 
     # Check that text is a string
-    if 'text' in chunk and not isinstance(chunk['text'], str):
+    if "text" in chunk and not isinstance(chunk["text"], str):
         error_msg = f"Chunk 'text' must be a string, got {type(chunk['text'])}"
         logger.warning(error_msg)
         if strict:
@@ -83,15 +81,15 @@ def validate_chunk(
         return False
 
     # Validate chunk_id if present
-    if 'chunk_id' in chunk:
-        if not chunk['chunk_id']:
+    if "chunk_id" in chunk:
+        if not chunk["chunk_id"]:
             error_msg = "Chunk 'chunk_id' cannot be empty"
             logger.warning(error_msg)
             if strict:
                 raise ValueError(error_msg)
             return False
 
-        if not isinstance(chunk['chunk_id'], str):
+        if not isinstance(chunk["chunk_id"], str):
             error_msg = f"Chunk 'chunk_id' must be a string, got {type(chunk['chunk_id'])}"
             logger.warning(error_msg)
             if strict:
@@ -99,7 +97,7 @@ def validate_chunk(
             return False
 
     # Validate numeric fields if present
-    numeric_fields = ['word_count', 'char_count', 'chunk_index', 'total_chunks']
+    numeric_fields = ["word_count", "char_count", "chunk_index", "total_chunks"]
     for field in numeric_fields:
         if field in chunk:
             if not isinstance(chunk[field], (int, float)):
@@ -125,7 +123,7 @@ def write_jsonl(
     output_path: str,
     validate: bool = True,
     overwrite: bool = False,
-    encoding: str = 'utf-8'
+    encoding: str = "utf-8",
 ) -> bool:
     """
     Write a list of chunks to a JSONL file.
@@ -182,7 +180,9 @@ def write_jsonl(
                 invalid_chunks.append(i)
 
         if invalid_chunks:
-            error_msg = f"Found {len(invalid_chunks)} invalid chunks at indices: {invalid_chunks[:10]}"
+            error_msg = (
+                f"Found {len(invalid_chunks)} invalid chunks at indices: {invalid_chunks[:10]}"
+            )
             if len(invalid_chunks) > 10:
                 error_msg += f" ... and {len(invalid_chunks) - 10} more"
             logger.error(error_msg)
@@ -192,12 +192,12 @@ def write_jsonl(
     try:
         written_count = 0
 
-        with open(output_file, 'w', encoding=encoding) as f:
+        with open(output_file, "w", encoding=encoding) as f:
             for i, chunk in enumerate(chunks):
                 try:
                     # Write chunk as JSON line
                     json_line = json.dumps(chunk, ensure_ascii=False)
-                    f.write(json_line + '\n')
+                    f.write(json_line + "\n")
                     written_count += 1
 
                 except (TypeError, ValueError) as e:
@@ -220,10 +220,7 @@ def write_jsonl(
 
 
 def append_jsonl(
-    chunk: dict[str, Any],
-    output_path: str,
-    validate: bool = True,
-    encoding: str = 'utf-8'
+    chunk: dict[str, Any], output_path: str, validate: bool = True, encoding: str = "utf-8"
 ) -> bool:
     """
     Append a single chunk to an existing JSONL file.
@@ -262,9 +259,9 @@ def append_jsonl(
 
     # Append chunk to file
     try:
-        with open(output_file, 'a', encoding=encoding) as f:
+        with open(output_file, "a", encoding=encoding) as f:
             json_line = json.dumps(chunk, ensure_ascii=False)
-            f.write(json_line + '\n')
+            f.write(json_line + "\n")
 
         logger.debug(f"Appended chunk {chunk.get('chunk_id', 'unknown')} to {output_path}")
 
@@ -284,10 +281,7 @@ def append_jsonl(
 
 
 def read_jsonl(
-    input_path: str,
-    validate: bool = True,
-    encoding: str = 'utf-8',
-    skip_invalid: bool = False
+    input_path: str, validate: bool = True, encoding: str = "utf-8", skip_invalid: bool = False
 ) -> list[dict[str, Any]]:
     """
     Read chunks from a JSONL file.
@@ -391,7 +385,7 @@ def count_chunks(input_path: str) -> int:
         raise FileNotFoundError(f"File not found: {input_path}")
 
     count = 0
-    with open(input_file, encoding='utf-8') as f:
+    with open(input_file, encoding="utf-8") as f:
         for line in f:
             if line.strip():
                 count += 1
@@ -399,11 +393,7 @@ def count_chunks(input_path: str) -> int:
     return count
 
 
-def merge_jsonl_files(
-    input_paths: list[str],
-    output_path: str,
-    validate: bool = True
-) -> bool:
+def merge_jsonl_files(input_paths: list[str], output_path: str, validate: bool = True) -> bool:
     """
     Merge multiple JSONL files into a single file.
 
@@ -440,26 +430,26 @@ if __name__ == "__main__":
     # Create sample chunks
     sample_chunks = [
         {
-            'text': 'This is the first chunk of text.',
-            'chunk_id': 'chunk_001',
-            'word_count': 7,
-            'char_count': 33,
-            'document_id': 'doc_123'
+            "text": "This is the first chunk of text.",
+            "chunk_id": "chunk_001",
+            "word_count": 7,
+            "char_count": 33,
+            "document_id": "doc_123",
         },
         {
-            'text': 'This is the second chunk with more content.',
-            'chunk_id': 'chunk_002',
-            'word_count': 8,
-            'char_count': 44,
-            'document_id': 'doc_123'
+            "text": "This is the second chunk with more content.",
+            "chunk_id": "chunk_002",
+            "word_count": 8,
+            "char_count": 44,
+            "document_id": "doc_123",
         },
         {
-            'text': 'And here is the third and final chunk.',
-            'chunk_id': 'chunk_003',
-            'word_count': 8,
-            'char_count': 39,
-            'document_id': 'doc_123'
-        }
+            "text": "And here is the third and final chunk.",
+            "chunk_id": "chunk_003",
+            "word_count": 8,
+            "char_count": 39,
+            "document_id": "doc_123",
+        },
     ]
 
     # Test validation
@@ -470,7 +460,7 @@ if __name__ == "__main__":
 
     # Test writing
     with tempfile.TemporaryDirectory() as tmpdir:
-        output_file = os.path.join(tmpdir, 'test_output.jsonl')
+        output_file = os.path.join(tmpdir, "test_output.jsonl")
 
         print(f"\n2. Writing chunks to {output_file}")
         success = write_jsonl(sample_chunks, output_file)
@@ -484,11 +474,11 @@ if __name__ == "__main__":
         # Test append
         print("\n4. Appending new chunk:")
         new_chunk = {
-            'text': 'This is an appended chunk.',
-            'chunk_id': 'chunk_004',
-            'word_count': 5,
-            'char_count': 27,
-            'document_id': 'doc_123'
+            "text": "This is an appended chunk.",
+            "chunk_id": "chunk_004",
+            "word_count": 5,
+            "char_count": 27,
+            "document_id": "doc_123",
         }
         append_success = append_jsonl(new_chunk, output_file)
         print(f"   Append successful: {append_success}")

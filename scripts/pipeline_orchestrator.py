@@ -64,8 +64,7 @@ def setup_logging(log_level: str = "INFO", log_file: str | None = None) -> loggi
 
     # Create formatter
     formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
     )
 
     # Console handler
@@ -95,7 +94,7 @@ class PipelineOrchestrator:
         metadata_path: str = "metadata.json",
         jsonl_output_dir: str = "data/jsonl",
         downloads_dir: str = "/tmp/rag_pipeline_downloads",
-        logger: logging.Logger | None = None
+        logger: logging.Logger | None = None,
     ):
         """
         Initialize the pipeline orchestrator.
@@ -140,17 +139,12 @@ class PipelineOrchestrator:
 
         if doc_type not in ["pdf", "html", "url"]:
             raise ValueError(
-                f"Invalid or missing document_type: {doc_type}. "
-                f"Must be one of: pdf, html, url"
+                f"Invalid or missing document_type: {doc_type}. Must be one of: pdf, html, url"
             )
 
         return doc_type
 
-    def _download_document(
-        self,
-        document_id: str,
-        metadata: dict[str, Any]
-    ) -> Path | None:
+    def _download_document(self, document_id: str, metadata: dict[str, Any]) -> Path | None:
         """
         Download document from Google Drive if needed.
 
@@ -174,9 +168,7 @@ class PipelineOrchestrator:
 
         # PDF and HTML require download from Drive
         if not drive_link:
-            raise ValueError(
-                f"Document {document_id} requires drive_link for type {doc_type}"
-            )
+            raise ValueError(f"Document {document_id} requires drive_link for type {doc_type}")
 
         self.logger.info(f"Downloading {document_id} from Google Drive...")
 
@@ -188,18 +180,13 @@ class PipelineOrchestrator:
         download_from_drive(drive_link, str(download_path), logger=self.logger)
 
         if not download_path.exists():
-            raise FileNotFoundError(
-                f"Downloaded file not found: {download_path}"
-            )
+            raise FileNotFoundError(f"Downloaded file not found: {download_path}")
 
         self.logger.info(f"Successfully downloaded to {download_path}")
         return download_path
 
     def _process_document(
-        self,
-        document_id: str,
-        metadata: dict[str, Any],
-        file_path: Path | None
+        self, document_id: str, metadata: dict[str, Any], file_path: Path | None
     ) -> str:
         """
         Process document using appropriate processor based on type.
@@ -241,9 +228,7 @@ class PipelineOrchestrator:
         if not raw_text or not raw_text.strip():
             raise ValueError(f"No text extracted from {document_id}")
 
-        self.logger.info(
-            f"Extracted {len(raw_text)} characters from {document_id}"
-        )
+        self.logger.info(f"Extracted {len(raw_text)} characters from {document_id}")
         return raw_text
 
     def _clean_text(self, raw_text: str, document_id: str) -> str:
@@ -261,16 +246,11 @@ class PipelineOrchestrator:
 
         cleaned_text = clean_text(raw_text, logger=self.logger)
 
-        self.logger.info(
-            f"Text cleaned: {len(raw_text)} -> {len(cleaned_text)} characters"
-        )
+        self.logger.info(f"Text cleaned: {len(raw_text)} -> {len(cleaned_text)} characters")
         return cleaned_text
 
     def _chunk_text(
-        self,
-        cleaned_text: str,
-        document_id: str,
-        metadata: dict[str, Any]
+        self, cleaned_text: str, document_id: str, metadata: dict[str, Any]
     ) -> list[dict[str, Any]]:
         """
         Chunk text with overlap and attach metadata.
@@ -287,10 +267,7 @@ class PipelineOrchestrator:
 
         # Chunk text with overlap (default: 500 words, 50 word overlap)
         chunks = chunk_text_with_overlap(
-            cleaned_text,
-            chunk_size=500,
-            overlap_size=50,
-            logger=self.logger
+            cleaned_text, chunk_size=500, overlap_size=50, logger=self.logger
         )
 
         self.logger.info(f"Created {len(chunks)} chunks for {document_id}")
@@ -315,21 +292,15 @@ class PipelineOrchestrator:
                 "page_start": chunk.get("page_start", 1),
                 "page_end": chunk.get("page_end", 1),
                 "chunk_size": chunk.get("chunk_size", 0),
-                "overlap_prev": chunk.get("overlap_prev", 0)
+                "overlap_prev": chunk.get("overlap_prev", 0),
             }
 
             enriched_chunks.append(enriched_chunk)
 
-        self.logger.info(
-            f"Attached metadata to all {len(enriched_chunks)} chunks"
-        )
+        self.logger.info(f"Attached metadata to all {len(enriched_chunks)} chunks")
         return enriched_chunks
 
-    def _write_jsonl(
-        self,
-        document_id: str,
-        chunks: list[dict[str, Any]]
-    ) -> Path:
+    def _write_jsonl(self, document_id: str, chunks: list[dict[str, Any]]) -> Path:
         """
         Write chunks to JSONL file.
 
@@ -373,9 +344,9 @@ class PipelineOrchestrator:
         Returns:
             True if processing succeeded, False otherwise
         """
-        self.logger.info(f"\n{'='*80}")
+        self.logger.info(f"\n{'=' * 80}")
         self.logger.info(f"Starting processing for document: {document_id}")
-        self.logger.info(f"{'='*80}\n")
+        self.logger.info(f"{'=' * 80}\n")
 
         file_path = None
 
@@ -388,8 +359,7 @@ class PipelineOrchestrator:
             # Check if already processed
             if metadata.get("jsonl_ready", False):
                 self.logger.warning(
-                    f"Document {document_id} already processed (jsonl_ready=True). "
-                    f"Skipping..."
+                    f"Document {document_id} already processed (jsonl_ready=True). Skipping..."
                 )
                 return False
 
@@ -418,23 +388,23 @@ class PipelineOrchestrator:
                 jsonl_ready=True,
                 embedding_done=False,
                 jsonl_path=str(output_path),
-                processed_at=datetime.now().isoformat()
+                processed_at=datetime.now().isoformat(),
             )
 
-            self.logger.info(f"\n{'='*80}")
+            self.logger.info(f"\n{'=' * 80}")
             self.logger.info(f"Successfully processed document: {document_id}")
             self.logger.info(f"Output: {output_path}")
             self.logger.info(f"Chunks created: {len(chunks)}")
-            self.logger.info(f"{'='*80}\n")
+            self.logger.info(f"{'=' * 80}\n")
 
             return True
 
         except Exception as e:
-            self.logger.error(f"\n{'='*80}")
+            self.logger.error(f"\n{'=' * 80}")
             self.logger.error(f"Failed to process document: {document_id}")
             self.logger.error(f"Error: {str(e)}")
             self.logger.error(f"Traceback:\n{traceback.format_exc()}")
-            self.logger.error(f"{'='*80}\n")
+            self.logger.error(f"{'=' * 80}\n")
 
             # Update metadata with error status
             try:
@@ -442,7 +412,7 @@ class PipelineOrchestrator:
                     document_id,
                     jsonl_ready=False,
                     error=str(e),
-                    failed_at=datetime.now().isoformat()
+                    failed_at=datetime.now().isoformat(),
                 )
             except Exception as meta_error:
                 self.logger.error(f"Failed to update error status: {meta_error}")
@@ -460,21 +430,16 @@ class PipelineOrchestrator:
         Returns:
             Dictionary with processing statistics
         """
-        self.logger.info(f"\n{'#'*80}")
+        self.logger.info(f"\n{'#' * 80}")
         self.logger.info("Starting batch processing of pending documents")
-        self.logger.info(f"{'#'*80}\n")
+        self.logger.info(f"{'#' * 80}\n")
 
         # Get pending documents
         pending_docs = self.metadata_manager.get_pending_documents()
 
         if not pending_docs:
             self.logger.info("No pending documents to process")
-            return {
-                "total": 0,
-                "succeeded": 0,
-                "failed": 0,
-                "skipped": 0
-            }
+            return {"total": 0, "succeeded": 0, "failed": 0, "skipped": 0}
 
         self.logger.info(f"Found {len(pending_docs)} pending documents\n")
 
@@ -486,7 +451,7 @@ class PipelineOrchestrator:
             "skipped": 0,
             "succeeded_ids": [],
             "failed_ids": [],
-            "skipped_ids": []
+            "skipped_ids": [],
         }
 
         for i, doc_id in enumerate(pending_docs, start=1):
@@ -508,9 +473,9 @@ class PipelineOrchestrator:
                     stats["failed_ids"].append(doc_id)
 
         # Print summary
-        self.logger.info(f"\n{'#'*80}")
+        self.logger.info(f"\n{'#' * 80}")
         self.logger.info("Batch processing completed")
-        self.logger.info(f"{'#'*80}")
+        self.logger.info(f"{'#' * 80}")
         self.logger.info(f"Total documents: {stats['total']}")
         self.logger.info(f"Succeeded: {stats['succeeded']}")
         self.logger.info(f"Failed: {stats['failed']}")
@@ -519,7 +484,7 @@ class PipelineOrchestrator:
         if stats["failed_ids"]:
             self.logger.warning(f"Failed document IDs: {', '.join(stats['failed_ids'])}")
 
-        self.logger.info(f"{'#'*80}\n")
+        self.logger.info(f"{'#' * 80}\n")
 
         return stats
 
@@ -582,34 +547,34 @@ Examples:
     --document-id pref92_visa2025 \\
     --metadata-path /path/to/metadata.json \\
     --output-dir /path/to/jsonl
-        """
+        """,
     )
 
     parser.add_argument(
         "--document-id",
         type=str,
-        help="Process a specific document by ID. If not provided, processes all pending documents."
+        help="Process a specific document by ID. If not provided, processes all pending documents.",
     )
 
     parser.add_argument(
         "--metadata-path",
         type=str,
         default="metadata.json",
-        help="Path to metadata.json file (default: ./metadata.json)"
+        help="Path to metadata.json file (default: ./metadata.json)",
     )
 
     parser.add_argument(
         "--output-dir",
         type=str,
         default="data/jsonl",
-        help="Output directory for JSONL files (default: ./data/jsonl)"
+        help="Output directory for JSONL files (default: ./data/jsonl)",
     )
 
     parser.add_argument(
         "--downloads-dir",
         type=str,
         default="/tmp/rag_pipeline_downloads",
-        help="Temporary directory for downloads"
+        help="Temporary directory for downloads",
     )
 
     parser.add_argument(
@@ -617,13 +582,13 @@ Examples:
         type=str,
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
         default="INFO",
-        help="Logging level (default: INFO)"
+        help="Logging level (default: INFO)",
     )
 
     parser.add_argument(
         "--log-file",
         type=str,
-        help="Optional log file path. If not provided, creates timestamped log in logs/"
+        help="Optional log file path. If not provided, creates timestamped log in logs/",
     )
 
     args = parser.parse_args()
@@ -642,7 +607,7 @@ Examples:
             metadata_path=args.metadata_path,
             jsonl_output_dir=args.output_dir,
             downloads_dir=args.downloads_dir,
-            logger=logger
+            logger=logger,
         )
 
         # Process documents

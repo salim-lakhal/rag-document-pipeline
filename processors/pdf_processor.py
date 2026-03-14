@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class PageInfo:
     """Represents information about a single page in a PDF."""
+
     page_number: int
     text: str
     char_count: int
@@ -25,6 +26,7 @@ class PageInfo:
 
 class PDFProcessingError(Exception):
     """Custom exception for PDF processing errors."""
+
     pass
 
 
@@ -52,7 +54,7 @@ def process_pdf(file_path: str, document_metadata: dict) -> dict:
         if not pdf_path.exists():
             raise PDFProcessingError(f"PDF file not found: {file_path}")
 
-        if not pdf_path.suffix.lower() == '.pdf':
+        if not pdf_path.suffix.lower() == ".pdf":
             raise PDFProcessingError(f"File is not a PDF: {file_path}")
 
         logger.info(f"Processing PDF: {pdf_path}")
@@ -61,7 +63,7 @@ def process_pdf(file_path: str, document_metadata: dict) -> dict:
         pages_data = extract_text_with_pages(str(pdf_path))
 
         # Check if OCR is needed (no text extracted or very little text)
-        total_chars = sum(page['char_count'] for page in pages_data)
+        total_chars = sum(page["char_count"] for page in pages_data)
         needs_ocr = total_chars < 50  # Threshold for considering OCR
 
         if needs_ocr:
@@ -70,33 +72,35 @@ def process_pdf(file_path: str, document_metadata: dict) -> dict:
 
             if ocr_text:
                 # Create a single page info for OCR'd content
-                pages_data = [{
-                    'page_number': 1,
-                    'text': ocr_text,
-                    'char_count': len(ocr_text),
-                    'is_ocr': True
-                }]
-                status = 'success_ocr'
+                pages_data = [
+                    {
+                        "page_number": 1,
+                        "text": ocr_text,
+                        "char_count": len(ocr_text),
+                        "is_ocr": True,
+                    }
+                ]
+                status = "success_ocr"
             else:
-                status = 'ocr_failed'
+                status = "ocr_failed"
         else:
-            status = 'success'
+            status = "success"
 
         # Combine all text
-        full_text = '\n\n'.join(page['text'] for page in pages_data if page['text'])
+        full_text = "\n\n".join(page["text"] for page in pages_data if page["text"])
 
         result = {
-            'text': full_text,
-            'page_info': pages_data,
-            'status': status,
-            'metadata': {
+            "text": full_text,
+            "page_info": pages_data,
+            "status": status,
+            "metadata": {
                 **document_metadata,
-                'file_path': str(pdf_path.absolute()),
-                'file_name': pdf_path.name,
-                'page_count': len(pages_data),
-                'total_chars': len(full_text),
-                'processing_method': 'ocr' if needs_ocr else 'text_extraction'
-            }
+                "file_path": str(pdf_path.absolute()),
+                "file_name": pdf_path.name,
+                "page_count": len(pages_data),
+                "total_chars": len(full_text),
+                "processing_method": "ocr" if needs_ocr else "text_extraction",
+            },
         }
 
         logger.info(f"Successfully processed PDF: {pdf_path} ({len(pages_data)} pages)")
@@ -146,10 +150,10 @@ def extract_text_with_pages(pdf_path: str) -> list[dict]:
                     text = _clean_extracted_text(text)
 
                     page_data = {
-                        'page_number': page_num,
-                        'text': text,
-                        'char_count': len(text),
-                        'is_ocr': False
+                        "page_number": page_num,
+                        "text": text,
+                        "char_count": len(text),
+                        "is_ocr": False,
                     }
 
                     pages_data.append(page_data)
@@ -158,12 +162,9 @@ def extract_text_with_pages(pdf_path: str) -> list[dict]:
                 except Exception as e:
                     logger.warning(f"Error extracting text from page {page_num}: {str(e)}")
                     # Add empty page data to maintain page numbering
-                    pages_data.append({
-                        'page_number': page_num,
-                        'text': '',
-                        'char_count': 0,
-                        'is_ocr': False
-                    })
+                    pages_data.append(
+                        {"page_number": page_num, "text": "", "char_count": 0, "is_ocr": False}
+                    )
 
         return pages_data
 
@@ -196,8 +197,7 @@ def ocr_pdf_if_needed(pdf_path: str) -> str:
         from pdf2image import convert_from_path
     except ImportError:
         logger.error(
-            "OCR dependencies not installed. "
-            "Install with: pip install pdf2image pytesseract pillow"
+            "OCR dependencies not installed. Install with: pip install pdf2image pytesseract pillow"
         )
         return ""
 
@@ -213,7 +213,7 @@ def ocr_pdf_if_needed(pdf_path: str) -> str:
         for page_num, image in enumerate(images, start=1):
             try:
                 # Perform OCR on the image
-                text = pytesseract.image_to_string(image, lang='fra+eng')
+                text = pytesseract.image_to_string(image, lang="fra+eng")
 
                 # Clean up the text
                 text = _clean_extracted_text(text)
@@ -226,7 +226,7 @@ def ocr_pdf_if_needed(pdf_path: str) -> str:
                 logger.warning(f"OCR failed for page {page_num}: {str(e)}")
                 continue
 
-        full_text = '\n\n'.join(extracted_texts)
+        full_text = "\n\n".join(extracted_texts)
         logger.info(f"OCR completed: extracted {len(full_text)} total characters")
 
         return full_text
@@ -251,14 +251,15 @@ def _clean_extracted_text(text: str) -> str:
 
     # Replace multiple spaces with single space
     import re
-    text = re.sub(r' +', ' ', text)
+
+    text = re.sub(r" +", " ", text)
 
     # Replace multiple newlines with maximum of 2
-    text = re.sub(r'\n{3,}', '\n\n', text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
 
     # Remove leading/trailing whitespace from each line
-    lines = [line.strip() for line in text.split('\n')]
-    text = '\n'.join(lines)
+    lines = [line.strip() for line in text.split("\n")]
+    text = "\n".join(lines)
 
     return text.strip()
 
@@ -280,12 +281,7 @@ async def process_pdf_async(file_path: str, document_metadata: dict) -> dict:
 
     loop = asyncio.get_event_loop()
     with ThreadPoolExecutor() as executor:
-        result = await loop.run_in_executor(
-            executor,
-            process_pdf,
-            file_path,
-            document_metadata
-        )
+        result = await loop.run_in_executor(executor, process_pdf, file_path, document_metadata)
 
     return result
 
@@ -293,8 +289,7 @@ async def process_pdf_async(file_path: str, document_metadata: dict) -> dict:
 if __name__ == "__main__":
     # Example usage and testing
     logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
 
     # Test with a sample PDF
@@ -302,7 +297,7 @@ if __name__ == "__main__":
 
     if len(sys.argv) > 1:
         test_pdf = sys.argv[1]
-        metadata = {'source': 'command_line', 'category': 'test'}
+        metadata = {"source": "command_line", "category": "test"}
 
         try:
             result = process_pdf(test_pdf, metadata)

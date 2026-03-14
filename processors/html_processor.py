@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 class HTMLProcessingError(Exception):
     """Custom exception for HTML processing errors."""
+
     pass
 
 
@@ -44,7 +45,7 @@ def process_html(file_path: str, document_metadata: dict) -> dict:
             raise HTMLProcessingError(f"HTML file not found: {file_path}")
 
         # Check for HTML-like extensions
-        valid_extensions = {'.html', '.htm', '.xhtml', '.xml'}
+        valid_extensions = {".html", ".htm", ".xhtml", ".xml"}
         if html_path.suffix.lower() not in valid_extensions:
             logger.warning(f"File may not be HTML: {file_path}")
 
@@ -52,12 +53,12 @@ def process_html(file_path: str, document_metadata: dict) -> dict:
 
         # Read the HTML file
         try:
-            with open(html_path, encoding='utf-8') as f:
+            with open(html_path, encoding="utf-8") as f:
                 html_content = f.read()
         except UnicodeDecodeError:
             # Try with different encoding
             logger.warning(f"UTF-8 decoding failed, trying latin-1 for {html_path}")
-            with open(html_path, encoding='latin-1') as f:
+            with open(html_path, encoding="latin-1") as f:
                 html_content = f.read()
 
         # Extract main content
@@ -67,25 +68,27 @@ def process_html(file_path: str, document_metadata: dict) -> dict:
         cleaned_text = clean_html_artifacts(main_text)
 
         # Create page info (single entry for HTML documents)
-        page_info = [{
-            'page_number': 1,
-            'text': cleaned_text,
-            'char_count': len(cleaned_text),
-            'is_ocr': False
-        }]
+        page_info = [
+            {
+                "page_number": 1,
+                "text": cleaned_text,
+                "char_count": len(cleaned_text),
+                "is_ocr": False,
+            }
+        ]
 
         result = {
-            'text': cleaned_text,
-            'page_info': page_info,
-            'status': 'success',
-            'metadata': {
+            "text": cleaned_text,
+            "page_info": page_info,
+            "status": "success",
+            "metadata": {
                 **document_metadata,
-                'file_path': str(html_path.absolute()),
-                'file_name': html_path.name,
-                'page_count': 1,
-                'total_chars': len(cleaned_text),
-                'processing_method': 'html_extraction'
-            }
+                "file_path": str(html_path.absolute()),
+                "file_name": html_path.name,
+                "page_count": 1,
+                "total_chars": len(cleaned_text),
+                "processing_method": "html_extraction",
+            },
         }
 
         logger.info(f"Successfully processed HTML: {html_path} ({len(cleaned_text)} chars)")
@@ -128,14 +131,21 @@ def extract_main_content(html_content: str) -> str:
     try:
         # Parse HTML with lxml parser (faster) or fall back to html.parser
         try:
-            soup = BeautifulSoup(html_content, 'lxml')
+            soup = BeautifulSoup(html_content, "lxml")
         except Exception:
-            soup = BeautifulSoup(html_content, 'html.parser')
+            soup = BeautifulSoup(html_content, "html.parser")
 
         # Remove unwanted elements
         unwanted_tags = [
-            'script', 'style', 'noscript', 'iframe', 'embed',
-            'object', 'applet', 'canvas', 'svg'
+            "script",
+            "style",
+            "noscript",
+            "iframe",
+            "embed",
+            "object",
+            "applet",
+            "canvas",
+            "svg",
         ]
 
         for tag in unwanted_tags:
@@ -144,10 +154,24 @@ def extract_main_content(html_content: str) -> str:
 
         # Remove common navigation and non-content elements
         unwanted_classes_ids = [
-            'nav', 'navigation', 'navbar', 'menu', 'sidebar',
-            'header', 'footer', 'advertisement', 'ad', 'ads',
-            'social', 'share', 'cookie', 'popup', 'modal',
-            'banner', 'promo', 'promotion'
+            "nav",
+            "navigation",
+            "navbar",
+            "menu",
+            "sidebar",
+            "header",
+            "footer",
+            "advertisement",
+            "ad",
+            "ads",
+            "social",
+            "share",
+            "cookie",
+            "popup",
+            "modal",
+            "banner",
+            "promo",
+            "promotion",
         ]
 
         for identifier in unwanted_classes_ids:
@@ -167,7 +191,7 @@ def extract_main_content(html_content: str) -> str:
         main_content = None
 
         # Look for semantic HTML5 tags first
-        main_content_tags = ['main', 'article']
+        main_content_tags = ["main", "article"]
         for tag in main_content_tags:
             main_element = soup.find(tag)
             if main_element:
@@ -177,14 +201,14 @@ def extract_main_content(html_content: str) -> str:
         # Look for common content containers
         if not main_content:
             content_selectors = [
-                {'id': 'content'},
-                {'id': 'main'},
-                {'id': 'main-content'},
-                {'class_': 'content'},
-                {'class_': 'main-content'},
-                {'class_': 'post-content'},
-                {'class_': 'entry-content'},
-                {'role': 'main'}
+                {"id": "content"},
+                {"id": "main"},
+                {"id": "main-content"},
+                {"class_": "content"},
+                {"class_": "main-content"},
+                {"class_": "post-content"},
+                {"class_": "entry-content"},
+                {"role": "main"},
             ]
 
             for selector in content_selectors:
@@ -195,7 +219,7 @@ def extract_main_content(html_content: str) -> str:
 
         # If no main content found, use body
         if not main_content:
-            main_content = soup.find('body') or soup
+            main_content = soup.find("body") or soup
 
         # Extract text with better spacing
         text = _extract_text_with_spacing(main_content)
@@ -219,9 +243,26 @@ def _extract_text_with_spacing(element) -> str:
     """
     # Block-level elements that should have newlines
     block_elements = {
-        'p', 'div', 'section', 'article', 'h1', 'h2', 'h3',
-        'h4', 'h5', 'h6', 'li', 'tr', 'br', 'hr', 'pre',
-        'blockquote', 'table', 'ul', 'ol', 'dl'
+        "p",
+        "div",
+        "section",
+        "article",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "li",
+        "tr",
+        "br",
+        "hr",
+        "pre",
+        "blockquote",
+        "table",
+        "ul",
+        "ol",
+        "dl",
     }
 
     text_parts = []
@@ -232,16 +273,16 @@ def _extract_text_with_spacing(element) -> str:
             if text:
                 text_parts.append(text)
         elif child.name in block_elements:
-            text_parts.append('\n')
+            text_parts.append("\n")
 
     # Join and clean up
-    text = ' '.join(text_parts)
+    text = " ".join(text_parts)
 
     # Normalize whitespace
-    text = re.sub(r' +', ' ', text)
-    text = re.sub(r'\n +', '\n', text)
-    text = re.sub(r' +\n', '\n', text)
-    text = re.sub(r'\n{3,}', '\n\n', text)
+    text = re.sub(r" +", " ", text)
+    text = re.sub(r"\n +", "\n", text)
+    text = re.sub(r" +\n", "\n", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
 
     return text.strip()
 
@@ -271,34 +312,34 @@ def clean_html_artifacts(text: str) -> str:
     text = html.unescape(text)
 
     # Remove any remaining HTML tags
-    text = re.sub(r'<[^>]+>', ' ', text)
+    text = re.sub(r"<[^>]+>", " ", text)
 
     # Remove numeric HTML entities that weren't decoded
-    text = re.sub(r'&#\d+;', '', text)
-    text = re.sub(r'&#x[0-9a-fA-F]+;', '', text)
+    text = re.sub(r"&#\d+;", "", text)
+    text = re.sub(r"&#x[0-9a-fA-F]+;", "", text)
 
     # Remove common HTML artifacts
     artifacts = [
-        r'\[if\s+.*?\]',  # IE conditional comments
-        r'\[endif\]',
-        r'<!--.*?-->',  # HTML comments
+        r"\[if\s+.*?\]",  # IE conditional comments
+        r"\[endif\]",
+        r"<!--.*?-->",  # HTML comments
     ]
 
     for pattern in artifacts:
-        text = re.sub(pattern, '', text, flags=re.DOTALL)
+        text = re.sub(pattern, "", text, flags=re.DOTALL)
 
     # Clean up whitespace
-    text = re.sub(r' +', ' ', text)
-    text = re.sub(r'\t+', ' ', text)
-    text = re.sub(r'\n\s*\n\s*\n+', '\n\n', text)
+    text = re.sub(r" +", " ", text)
+    text = re.sub(r"\t+", " ", text)
+    text = re.sub(r"\n\s*\n\s*\n+", "\n\n", text)
 
     # Remove lines that are just whitespace
-    lines = [line.strip() for line in text.split('\n')]
+    lines = [line.strip() for line in text.split("\n")]
     lines = [line for line in lines if line]
-    text = '\n'.join(lines)
+    text = "\n".join(lines)
 
     # Remove URLs that are likely artifacts (standalone URLs)
-    text = re.sub(r'^\s*https?://\S+\s*$', '', text, flags=re.MULTILINE)
+    text = re.sub(r"^\s*https?://\S+\s*$", "", text, flags=re.MULTILINE)
 
     return text.strip()
 
@@ -319,12 +360,7 @@ async def process_html_async(file_path: str, document_metadata: dict) -> dict:
 
     loop = asyncio.get_event_loop()
     with ThreadPoolExecutor() as executor:
-        result = await loop.run_in_executor(
-            executor,
-            process_html,
-            file_path,
-            document_metadata
-        )
+        result = await loop.run_in_executor(executor, process_html, file_path, document_metadata)
 
     return result
 
@@ -347,26 +383,26 @@ def extract_metadata_from_html(html_content: str) -> dict:
     metadata = {}
 
     try:
-        soup = BeautifulSoup(html_content, 'html.parser')
+        soup = BeautifulSoup(html_content, "html.parser")
 
         # Extract title
-        title_tag = soup.find('title')
+        title_tag = soup.find("title")
         if title_tag:
-            metadata['title'] = title_tag.get_text().strip()
+            metadata["title"] = title_tag.get_text().strip()
 
         # Extract meta tags
         meta_tags = {
-            'description': ['name', 'description'],
-            'author': ['name', 'author'],
-            'keywords': ['name', 'keywords'],
-            'og_title': ['property', 'og:title'],
-            'og_description': ['property', 'og:description'],
+            "description": ["name", "description"],
+            "author": ["name", "author"],
+            "keywords": ["name", "keywords"],
+            "og_title": ["property", "og:title"],
+            "og_description": ["property", "og:description"],
         }
 
         for key, (attr, value) in meta_tags.items():
-            meta = soup.find('meta', attrs={attr: value})
-            if meta and meta.get('content'):
-                metadata[key] = meta['content'].strip()
+            meta = soup.find("meta", attrs={attr: value})
+            if meta and meta.get("content"):
+                metadata[key] = meta["content"].strip()
 
     except Exception as e:
         logger.warning(f"Error extracting metadata: {str(e)}")
@@ -377,15 +413,14 @@ def extract_metadata_from_html(html_content: str) -> dict:
 if __name__ == "__main__":
     # Example usage and testing
     logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
 
     import sys
 
     if len(sys.argv) > 1:
         test_html = sys.argv[1]
-        metadata = {'source': 'command_line', 'category': 'test'}
+        metadata = {"source": "command_line", "category": "test"}
 
         try:
             result = process_html(test_html, metadata)

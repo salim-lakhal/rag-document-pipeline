@@ -35,26 +35,24 @@ from .url_processor import (
 
 __all__ = [
     # PDF Processor
-    'process_pdf',
-    'extract_text_with_pages',
-    'ocr_pdf_if_needed',
-    'process_pdf_async',
-    'PDFProcessingError',
-
+    "process_pdf",
+    "extract_text_with_pages",
+    "ocr_pdf_if_needed",
+    "process_pdf_async",
+    "PDFProcessingError",
     # HTML Processor
-    'process_html',
-    'extract_main_content',
-    'clean_html_artifacts',
-    'process_html_async',
-    'extract_metadata_from_html',
-    'HTMLProcessingError',
-
+    "process_html",
+    "extract_main_content",
+    "clean_html_artifacts",
+    "process_html_async",
+    "extract_metadata_from_html",
+    "HTMLProcessingError",
     # URL Processor
-    'process_url',
-    'fetch_and_extract',
-    'handle_http_errors',
-    'process_url_async',
-    'URLProcessingError',
+    "process_url",
+    "fetch_and_extract",
+    "handle_http_errors",
+    "process_url_async",
+    "URLProcessingError",
 ]
 
-__version__ = '1.0.0'
+__version__ = "1.0.0"

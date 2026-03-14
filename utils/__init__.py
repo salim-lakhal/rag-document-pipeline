@@ -26,18 +26,18 @@ from .metadata_manager import (
 
 __all__ = [
     # GDrive Client
-    'GDriveClient',
-    'GDriveClientError',
-    'InvalidDriveLinkError',
-    'FileDownloadError',
-    'FileUploadError',
-    'AuthenticationError',
+    "GDriveClient",
+    "GDriveClientError",
+    "InvalidDriveLinkError",
+    "FileDownloadError",
+    "FileUploadError",
+    "AuthenticationError",
     # Metadata Manager
-    'MetadataManager',
-    'MetadataError',
-    'MetadataFileNotFoundError',
-    'MetadataValidationError',
-    'DocumentNotFoundError',
+    "MetadataManager",
+    "MetadataError",
+    "MetadataFileNotFoundError",
+    "MetadataValidationError",
+    "DocumentNotFoundError",
 ]
 
-__version__ = '1.0.0'
+__version__ = "1.0.0"

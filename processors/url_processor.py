@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 class URLProcessingError(Exception):
     """Custom exception for URL processing errors."""
+
     pass
 
 
@@ -42,7 +43,7 @@ def process_url(url: str, document_metadata: dict) -> dict:
         if not parsed_url.scheme or not parsed_url.netloc:
             raise URLProcessingError(f"Invalid URL format: {url}")
 
-        if parsed_url.scheme not in ['http', 'https']:
+        if parsed_url.scheme not in ["http", "https"]:
             raise URLProcessingError(f"Unsupported URL scheme: {parsed_url.scheme}")
 
         logger.info(f"Processing URL: {url}")
@@ -52,30 +53,32 @@ def process_url(url: str, document_metadata: dict) -> dict:
 
         if not extracted_text:
             logger.warning(f"No content extracted from URL: {url}")
-            status = 'no_content'
+            status = "no_content"
         else:
-            status = 'success'
+            status = "success"
 
         # Create page info
-        page_info = [{
-            'page_number': 1,
-            'text': extracted_text,
-            'char_count': len(extracted_text),
-            'is_ocr': False
-        }]
+        page_info = [
+            {
+                "page_number": 1,
+                "text": extracted_text,
+                "char_count": len(extracted_text),
+                "is_ocr": False,
+            }
+        ]
 
         result = {
-            'text': extracted_text,
-            'page_info': page_info,
-            'status': status,
-            'metadata': {
+            "text": extracted_text,
+            "page_info": page_info,
+            "status": status,
+            "metadata": {
                 **document_metadata,
-                'url': url,
-                'domain': parsed_url.netloc,
-                'page_count': 1,
-                'total_chars': len(extracted_text),
-                'processing_method': 'url_extraction'
-            }
+                "url": url,
+                "domain": parsed_url.netloc,
+                "page_count": 1,
+                "total_chars": len(extracted_text),
+                "processing_method": "url_extraction",
+            },
         }
 
         logger.info(f"Successfully processed URL: {url} ({len(extracted_text)} chars)")
@@ -116,7 +119,9 @@ def fetch_and_extract(url: str) -> str:
     extracted_text = _extract_with_trafilatura(html_content, url)
 
     if extracted_text and len(extracted_text) > 100:
-        logger.debug(f"Successfully extracted content with trafilatura: {len(extracted_text)} chars")
+        logger.debug(
+            f"Successfully extracted content with trafilatura: {len(extracted_text)} chars"
+        )
         return extracted_text
 
     # Fallback to readability
@@ -124,7 +129,9 @@ def fetch_and_extract(url: str) -> str:
     extracted_text = _extract_with_readability(html_content, url)
 
     if extracted_text and len(extracted_text) > 100:
-        logger.debug(f"Successfully extracted content with readability: {len(extracted_text)} chars")
+        logger.debug(
+            f"Successfully extracted content with readability: {len(extracted_text)} chars"
+        )
         return extracted_text
 
     # Last resort: use BeautifulSoup
@@ -160,7 +167,7 @@ def _extract_with_trafilatura(html_content: str, url: str) -> str:
             include_tables=True,
             no_fallback=False,
             deduplicate=True,
-            output_format='txt'
+            output_format="txt",
         )
 
         return extracted or ""
@@ -196,18 +203,19 @@ def _extract_with_readability(html_content: str, url: str) -> str:
         content_html = doc.summary()
 
         # Convert to text using BeautifulSoup
-        soup = BeautifulSoup(content_html, 'html.parser')
+        soup = BeautifulSoup(content_html, "html.parser")
 
         # Remove script and style elements
-        for element in soup(['script', 'style']):
+        for element in soup(["script", "style"]):
             element.decompose()
 
         # Get text
-        text = soup.get_text(separator='\n', strip=True)
+        text = soup.get_text(separator="\n", strip=True)
 
         # Clean up whitespace
         import re
-        text = re.sub(r'\n\s*\n\s*\n+', '\n\n', text)
+
+        text = re.sub(r"\n\s*\n\s*\n+", "\n\n", text)
 
         return text.strip()
 
@@ -233,18 +241,19 @@ def _extract_with_beautifulsoup(html_content: str) -> str:
         return ""
 
     try:
-        soup = BeautifulSoup(html_content, 'html.parser')
+        soup = BeautifulSoup(html_content, "html.parser")
 
         # Remove unwanted elements
-        for element in soup(['script', 'style', 'nav', 'header', 'footer', 'aside']):
+        for element in soup(["script", "style", "nav", "header", "footer", "aside"]):
             element.decompose()
 
         # Get text
-        text = soup.get_text(separator='\n', strip=True)
+        text = soup.get_text(separator="\n", strip=True)
 
         # Clean up
         import re
-        text = re.sub(r'\n\s*\n\s*\n+', '\n\n', text)
+
+        text = re.sub(r"\n\s*\n\s*\n+", "\n\n", text)
 
         return text.strip()
 
@@ -288,7 +297,7 @@ def handle_http_errors(url: str, timeout: int = 30, max_retries: int = 3) -> str
         total=max_retries,
         backoff_factor=1,
         status_forcelist=[429, 500, 502, 503, 504],
-        allowed_methods=["HEAD", "GET", "OPTIONS"]
+        allowed_methods=["HEAD", "GET", "OPTIONS"],
     )
 
     adapter = HTTPAdapter(max_retries=retry_strategy)
@@ -297,35 +306,31 @@ def handle_http_errors(url: str, timeout: int = 30, max_retries: int = 3) -> str
 
     # Set headers to avoid being blocked
     headers = {
-        'User-Agent': (
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
-            '(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         ),
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9,fr;q=0.8',
-        'Accept-Encoding': 'gzip, deflate',
-        'DNT': '1',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1'
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9,fr;q=0.8",
+        "Accept-Encoding": "gzip, deflate",
+        "DNT": "1",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1",
     }
 
     try:
         logger.info(f"Fetching URL: {url}")
 
         response = session.get(
-            url,
-            headers=headers,
-            timeout=timeout,
-            allow_redirects=True,
-            verify=True
+            url, headers=headers, timeout=timeout, allow_redirects=True, verify=True
         )
 
         # Check for successful response
         response.raise_for_status()
 
         # Check content type
-        content_type = response.headers.get('Content-Type', '').lower()
-        if 'html' not in content_type and 'xml' not in content_type:
+        content_type = response.headers.get("Content-Type", "").lower()
+        if "html" not in content_type and "xml" not in content_type:
             logger.warning(f"URL does not return HTML content: {content_type}")
 
         # Try to decode with proper encoding
@@ -333,7 +338,7 @@ def handle_http_errors(url: str, timeout: int = 30, max_retries: int = 3) -> str
             html_content = response.text
         else:
             # Guess encoding
-            html_content = response.content.decode('utf-8', errors='replace')
+            html_content = response.content.decode("utf-8", errors="replace")
 
         logger.info(f"Successfully fetched {len(html_content)} bytes from {url}")
         return html_content
@@ -362,7 +367,7 @@ def handle_http_errors(url: str, timeout: int = 30, max_retries: int = 3) -> str
         return None
 
     except requests.exceptions.HTTPError as e:
-        status_code = e.response.status_code if e.response else 'unknown'
+        status_code = e.response.status_code if e.response else "unknown"
         logger.error(f"HTTP error {status_code} for URL {url}: {str(e)}")
         return None
 
@@ -392,9 +397,7 @@ async def process_url_async(url: str, document_metadata: dict) -> dict:
     try:
         import aiohttp
     except ImportError:
-        raise URLProcessingError(
-            "aiohttp not installed. Install with: pip install aiohttp"
-        )
+        raise URLProcessingError("aiohttp not installed. Install with: pip install aiohttp")
 
     try:
         # Validate URL
@@ -406,9 +409,9 @@ async def process_url_async(url: str, document_metadata: dict) -> dict:
 
         # Fetch content
         headers = {
-            'User-Agent': (
-                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
-                '(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
             )
         }
 
@@ -427,25 +430,27 @@ async def process_url_async(url: str, document_metadata: dict) -> dict:
             extracted_text = _extract_with_beautifulsoup(html_content)
 
         # Create result
-        page_info = [{
-            'page_number': 1,
-            'text': extracted_text,
-            'char_count': len(extracted_text),
-            'is_ocr': False
-        }]
+        page_info = [
+            {
+                "page_number": 1,
+                "text": extracted_text,
+                "char_count": len(extracted_text),
+                "is_ocr": False,
+            }
+        ]
 
         result = {
-            'text': extracted_text,
-            'page_info': page_info,
-            'status': 'success' if extracted_text else 'no_content',
-            'metadata': {
+            "text": extracted_text,
+            "page_info": page_info,
+            "status": "success" if extracted_text else "no_content",
+            "metadata": {
                 **document_metadata,
-                'url': url,
-                'domain': parsed_url.netloc,
-                'page_count': 1,
-                'total_chars': len(extracted_text),
-                'processing_method': 'url_extraction_async'
-            }
+                "url": url,
+                "domain": parsed_url.netloc,
+                "page_count": 1,
+                "total_chars": len(extracted_text),
+                "processing_method": "url_extraction_async",
+            },
         }
 
         logger.info(f"Successfully processed URL (async): {url} ({len(extracted_text)} chars)")
@@ -459,15 +464,14 @@ async def process_url_async(url: str, document_metadata: dict) -> dict:
 if __name__ == "__main__":
     # Example usage and testing
     logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
 
     import sys
 
     if len(sys.argv) > 1:
         test_url = sys.argv[1]
-        metadata = {'source': 'command_line', 'category': 'test'}
+        metadata = {"source": "command_line", "category": "test"}
 
         try:
             result = process_url(test_url, metadata)
