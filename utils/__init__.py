@@ -1,7 +1,7 @@
 """
 Utils Package
 
-Utility modules for the OQTF RAG Pipeline project.
+Utility modules for the RAG document pipeline.
 
 Modules:
     - gdrive_client: Google Drive integration for file operations
@@ -9,20 +9,19 @@ Modules:
 """
 
 from .gdrive_client import (
+    AuthenticationError,
+    FileDownloadError,
+    FileUploadError,
     GDriveClient,
     GDriveClientError,
     InvalidDriveLinkError,
-    FileDownloadError,
-    FileUploadError,
-    AuthenticationError
 )
-
 from .metadata_manager import (
-    MetadataManager,
+    DocumentNotFoundError,
     MetadataError,
     MetadataFileNotFoundError,
+    MetadataManager,
     MetadataValidationError,
-    DocumentNotFoundError
 )
 
 __all__ = [
@@ -41,4 +40,4 @@ __all__ = [
     'DocumentNotFoundError',
 ]
 
-__version__ = '0.1.0'
+__version__ = '1.0.0'

@@ -16,17 +16,16 @@ Environment Variables Required:
     - GOOGLE_DRIVE_REFRESH_TOKEN
 """
 
+import logging
 import os
 import re
 from pathlib import Path
-from typing import Optional
-import logging
 
-from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from googleapiclient.errors import HttpError
+from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -81,7 +80,7 @@ class GDriveClient:
     # Scopes required for Drive operations
     SCOPES = ['https://www.googleapis.com/auth/drive']
 
-    def __init__(self, credentials_file: Optional[str] = None) -> None:
+    def __init__(self, credentials_file: str | None = None) -> None:
         """
         Initialize Google Drive client with OAuth credentials.
 
@@ -97,7 +96,7 @@ class GDriveClient:
             GOOGLE_DRIVE_CLIENT_SECRET: OAuth client secret
             GOOGLE_DRIVE_REFRESH_TOKEN: OAuth refresh token
         """
-        self.credentials: Optional[Credentials] = None
+        self.credentials: Credentials | None = None
         self.service = None
 
         try:
@@ -109,7 +108,7 @@ class GDriveClient:
                 f"Failed to initialize Google Drive client: {str(e)}"
             ) from e
 
-    def _authenticate(self, credentials_file: Optional[str] = None) -> None:
+    def _authenticate(self, credentials_file: str | None = None) -> None:
         """
         Authenticate with Google Drive API using OAuth credentials.
 
@@ -280,8 +279,8 @@ class GDriveClient:
     def upload_file(
         self,
         file_path: str,
-        drive_folder_id: Optional[str] = None,
-        file_name: Optional[str] = None
+        drive_folder_id: str | None = None,
+        file_name: str | None = None
     ) -> str:
         """
         Upload a file to Google Drive.

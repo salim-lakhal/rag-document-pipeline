@@ -8,9 +8,9 @@ efficient for streaming large datasets.
 
 import json
 import logging
-from typing import List, Dict, Any, Optional, Set
-from pathlib import Path
 import os
+from pathlib import Path
+from typing import Any
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 
 
 def validate_chunk(
-    chunk: Dict[str, Any],
-    required_fields: Optional[Set[str]] = None,
+    chunk: dict[str, Any],
+    required_fields: set[str] | None = None,
     strict: bool = False
 ) -> bool:
     """
@@ -121,7 +121,7 @@ def validate_chunk(
 
 
 def write_jsonl(
-    chunks: List[Dict[str, Any]],
+    chunks: list[dict[str, Any]],
     output_path: str,
     validate: bool = True,
     overwrite: bool = False,
@@ -210,9 +210,9 @@ def write_jsonl(
 
         return True
 
-    except IOError as e:
+    except OSError as e:
         logger.error(f"Failed to write to {output_path}: {e}")
-        raise IOError(f"Failed to write to {output_path}: {e}")
+        raise OSError(f"Failed to write to {output_path}: {e}")
 
     except Exception as e:
         logger.error(f"Unexpected error writing JSONL: {e}")
@@ -220,7 +220,7 @@ def write_jsonl(
 
 
 def append_jsonl(
-    chunk: Dict[str, Any],
+    chunk: dict[str, Any],
     output_path: str,
     validate: bool = True,
     encoding: str = 'utf-8'
@@ -274,9 +274,9 @@ def append_jsonl(
         logger.error(f"Failed to serialize chunk: {e}")
         raise ValueError(f"Failed to serialize chunk: {e}")
 
-    except IOError as e:
+    except OSError as e:
         logger.error(f"Failed to append to {output_path}: {e}")
-        raise IOError(f"Failed to append to {output_path}: {e}")
+        raise OSError(f"Failed to append to {output_path}: {e}")
 
     except Exception as e:
         logger.error(f"Unexpected error appending to JSONL: {e}")
@@ -288,7 +288,7 @@ def read_jsonl(
     validate: bool = True,
     encoding: str = 'utf-8',
     skip_invalid: bool = False
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """
     Read chunks from a JSONL file.
 
@@ -323,7 +323,7 @@ def read_jsonl(
     invalid_count = 0
 
     try:
-        with open(input_file, 'r', encoding=encoding) as f:
+        with open(input_file, encoding=encoding) as f:
             for line_num, line in enumerate(f, 1):
                 line = line.strip()
 
@@ -361,9 +361,9 @@ def read_jsonl(
 
         return chunks
 
-    except IOError as e:
+    except OSError as e:
         logger.error(f"Failed to read from {input_path}: {e}")
-        raise IOError(f"Failed to read from {input_path}: {e}")
+        raise OSError(f"Failed to read from {input_path}: {e}")
 
     except Exception as e:
         logger.error(f"Unexpected error reading JSONL: {e}")
@@ -391,7 +391,7 @@ def count_chunks(input_path: str) -> int:
         raise FileNotFoundError(f"File not found: {input_path}")
 
     count = 0
-    with open(input_file, 'r', encoding='utf-8') as f:
+    with open(input_file, encoding='utf-8') as f:
         for line in f:
             if line.strip():
                 count += 1
@@ -400,7 +400,7 @@ def count_chunks(input_path: str) -> int:
 
 
 def merge_jsonl_files(
-    input_paths: List[str],
+    input_paths: list[str],
     output_path: str,
     validate: bool = True
 ) -> bool:
@@ -500,7 +500,7 @@ if __name__ == "__main__":
 
         # Display file content
         print("\n6. File contents:")
-        with open(output_file, 'r') as f:
+        with open(output_file) as f:
             for i, line in enumerate(f, 1):
                 chunk_preview = json.loads(line)
                 print(f"   Line {i}: {chunk_preview['chunk_id']} - {chunk_preview['text'][:40]}...")

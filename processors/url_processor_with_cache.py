@@ -8,14 +8,12 @@ This module processes web URLs with caching functionality:
 4. Processes cached HTML like a local file
 5. Keeps source_url in metadata for reference
 
-Per Consigne.txt section: "Quick Note for Claude – URL Handling in Pipeline"
+Caches HTML to Google Drive for reproducible extraction and offline processing.
 """
 
-from pathlib import Path
-from typing import Dict, Optional
 import logging
+from pathlib import Path
 from urllib.parse import urlparse
-import tempfile
 
 logger = logging.getLogger(__name__)
 
@@ -30,8 +28,8 @@ def fetch_and_cache_url(
     document_id: str,
     gdrive_client,
     metadata_manager,
-    html_folder_id: Optional[str] = None,
-    local_cache_dir: str = "/home/salim/Informatique/Perso/OQTF/data/html_cache"
+    html_folder_id: str | None = None,
+    local_cache_dir: str = "data/html_cache"
 ) -> tuple[str, str]:
     """
     Fetch URL content and cache it as HTML to Google Drive.
@@ -89,7 +87,7 @@ def fetch_and_cache_url(
         logger.info(f"Cached HTML locally: {local_html_path}")
 
         # Upload to Google Drive
-        logger.info(f"Uploading HTML to Google Drive...")
+        logger.info("Uploading HTML to Google Drive...")
         file_id = gdrive_client.upload_file(
             str(local_html_path),
             drive_folder_id=html_folder_id,
@@ -118,11 +116,11 @@ def fetch_and_cache_url(
 def process_url_with_cache(
     document_id: str,
     source_url: str,
-    document_metadata: Dict,
+    document_metadata: dict,
     gdrive_client,
     metadata_manager,
     html_processor,
-    html_folder_id: Optional[str] = None
+    html_folder_id: str | None = None
 ) -> dict:
     """
     Process URL by caching HTML and then processing like a local file.
@@ -208,11 +206,11 @@ def process_url_simple(url: str, document_metadata: dict) -> dict:
 def process_url(
     document_id: str,
     source_url: str,
-    document_metadata: Dict,
+    document_metadata: dict,
     gdrive_client=None,
     metadata_manager=None,
     html_processor=None,
-    html_folder_id: Optional[str] = None,
+    html_folder_id: str | None = None,
     cache_to_drive: bool = True
 ) -> dict:
     """

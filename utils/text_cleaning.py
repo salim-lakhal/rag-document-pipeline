@@ -6,10 +6,8 @@ from various document formats. It handles boilerplate removal, whitespace
 normalization, language detection, and date standardization.
 """
 
-import re
-from typing import Optional
-from collections import Counter
 import logging
+import re
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -38,7 +36,7 @@ def detect_language(text: str) -> str:
         return "unknown"
 
     try:
-        from langdetect import detect, LangDetectException
+        from langdetect import LangDetectException, detect
 
         # Use only first 1000 characters for efficiency
         sample_text = text[:1000].strip()
@@ -312,11 +310,11 @@ def standardize_dates(text: str) -> str:
     # Converts to YYYY-MM-DD, attempting DD/MM/YYYY interpretation first
     date_patterns = [
         # DD/MM/YYYY format (European style)
-        (r'\b(\d{1,2})[/-.](\d{1,2})[/-.](\d{4})\b',
+        (r'\b(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})\b',
          lambda m: f"{m.group(3)}-{m.group(2).zfill(2)}-{m.group(1).zfill(2)}"),
 
         # YYYY/MM/DD format (ISO-like with different separators)
-        (r'\b(\d{4})[/-.](\d{1,2})[/-.](\d{1,2})\b',
+        (r'\b(\d{4})[/\-.](\d{1,2})[/\-.](\d{1,2})\b',
          lambda m: f"{m.group(1)}-{m.group(2).zfill(2)}-{m.group(3).zfill(2)}"),
     ]
 
@@ -343,10 +341,10 @@ def standardize_dates(text: str) -> str:
         'juin': '06',
         'juillet': '07', 'juil': '07',
         'août': '08', 'aout': '08',
-        'septembre': '09', 'sept': '09',
-        'octobre': '10', 'oct': '10',
-        'novembre': '11', 'nov': '11',
-        'décembre': '12', 'decembre': '12', 'déc': '12', 'dec': '12',
+        'septembre': '09',
+        'octobre': '10',
+        'novembre': '11',
+        'décembre': '12', 'decembre': '12', 'déc': '12',
     }
 
     # Replace month names with numbers

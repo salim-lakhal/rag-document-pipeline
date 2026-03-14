@@ -8,14 +8,14 @@ The metadata file follows the JSONL format (one JSON object per line) or
 a standard JSON array format.
 """
 
+import fcntl
 import json
 import logging
-from pathlib import Path
-from typing import List, Dict, Optional, Any
-from datetime import datetime
-from copy import deepcopy
-import fcntl
 from contextlib import contextmanager
+from copy import deepcopy
+from datetime import datetime
+from pathlib import Path
+from typing import Any
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -98,9 +98,9 @@ class MetadataManager:
             >>> manager = MetadataManager("/data/meta/metadata.json")
         """
         self.metadata_file = Path(metadata_file).resolve()
-        self.metadata: List[Dict[str, Any]] = []
+        self.metadata: list[dict[str, Any]] = []
         self._is_jsonl = False
-        self._last_modified: Optional[float] = None
+        self._last_modified: float | None = None
 
         if not self.metadata_file.exists():
             logger.warning(
@@ -125,7 +125,7 @@ class MetadataManager:
             MetadataError: If file format is invalid
         """
         try:
-            with open(self.metadata_file, 'r', encoding='utf-8') as f:
+            with open(self.metadata_file, encoding='utf-8') as f:
                 content = f.read().strip()
 
             if not content:
@@ -181,7 +181,7 @@ class MetadataManager:
                 f"Failed to load metadata from {self.metadata_file}: {str(e)}"
             ) from e
 
-    def _validate_document(self, document: Dict[str, Any]) -> None:
+    def _validate_document(self, document: dict[str, Any]) -> None:
         """
         Validate document metadata structure.
 
@@ -218,23 +218,19 @@ class MetadataManager:
 
     @contextmanager
     def _file_lock(self):
-        """
-        Context manager for file locking to prevent concurrent writes.
-
-        Yields:
-            File lock context
-        """
+        """Context manager for file locking to prevent concurrent writes."""
         lock_file = self.metadata_file.with_suffix('.lock')
+        f = open(lock_file, 'w')
         try:
-            with open(lock_file, 'w') as f:
-                fcntl.flock(f.fileno(), fcntl.LOCK_EX)
-                yield
+            fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+            yield
         finally:
             fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+            f.close()
             if lock_file.exists():
                 lock_file.unlink()
 
-    def get_pending_documents(self) -> List[Dict[str, Any]]:
+    def get_pending_documents(self) -> list[dict[str, Any]]:
         """
         Get all documents where jsonl_ready is False.
 
@@ -256,7 +252,7 @@ class MetadataManager:
         logger.info(f"Found {len(pending)} pending documents")
         return deepcopy(pending)
 
-    def get_document(self, document_id: str) -> Dict[str, Any]:
+    def get_document(self, document_id: str) -> dict[str, Any]:
         """
         Get metadata for a specific document.
 
@@ -285,9 +281,9 @@ class MetadataManager:
     def update_document_status(
         self,
         document_id: str,
-        jsonl_ready: Optional[bool] = None,
-        embedding_done: Optional[bool] = None,
-        chunk_count: Optional[int] = None
+        jsonl_ready: bool | None = None,
+        embedding_done: bool | None = None,
+        chunk_count: int | None = None
     ) -> None:
         """
         Update processing status for a document.
@@ -341,7 +337,7 @@ class MetadataManager:
                 f"Cannot update status: document not found: {document_id}"
             )
 
-    def add_document(self, document_metadata: Dict[str, Any]) -> None:
+    def add_document(self, document_metadata: dict[str, Any]) -> None:
         """
         Add a new document to metadata.
 
@@ -422,7 +418,7 @@ class MetadataManager:
 
         logger.info(f"Removed document: {document_id}")
 
-    def get_all_documents(self) -> List[Dict[str, Any]]:
+    def get_all_documents(self) -> list[dict[str, Any]]:
         """
         Get all documents in metadata.
 
@@ -436,7 +432,7 @@ class MetadataManager:
         """
         return deepcopy(self.metadata)
 
-    def get_documents_by_category(self, category: str) -> List[Dict[str, Any]]:
+    def get_documents_by_category(self, category: str) -> list[dict[str, Any]]:
         """
         Get all documents in a specific category.
 
@@ -458,7 +454,7 @@ class MetadataManager:
         logger.info(f"Found {len(docs)} documents in category: {category}")
         return deepcopy(docs)
 
-    def get_documents_by_jurisdiction(self, jurisdiction: str) -> List[Dict[str, Any]]:
+    def get_documents_by_jurisdiction(self, jurisdiction: str) -> list[dict[str, Any]]:
         """
         Get all documents for a specific jurisdiction.
 
@@ -479,7 +475,7 @@ class MetadataManager:
         logger.info(f"Found {len(docs)} documents for jurisdiction: {jurisdiction}")
         return deepcopy(docs)
 
-    def _save_to_disk(self, data: List[Dict[str, Any]]) -> None:
+    def _save_to_disk(self, data: list[dict[str, Any]]) -> None:
         """
         Save metadata to disk in the appropriate format.
 
@@ -547,7 +543,7 @@ class MetadataManager:
         logger.info("Reloading metadata from file")
         self._load_metadata()
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """
         Get statistics about the metadata collection.
 

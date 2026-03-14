@@ -1,0 +1,84 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rag-document-pipeline"
+version = "1.0.0"
+description = "Production RAG pipeline for multi-format document processing with intelligent chunking and metadata enrichment"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Salim Lakhal"}
+]
+keywords = ["rag", "nlp", "document-processing", "chunking", "llm", "vector-search"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Text Processing :: General",
+]
+
+dependencies = [
+    "pdfplumber>=0.11.0",
+    "PyMuPDF>=1.23.0",
+    "beautifulsoup4>=4.12.0",
+    "lxml>=5.0.0",
+    "trafilatura>=1.10.0",
+    "readability-lxml>=0.8.1",
+    "langdetect>=1.0.9",
+    "google-auth>=2.25.0",
+    "google-auth-oauthlib>=1.2.0",
+    "google-auth-httplib2>=0.2.0",
+    "google-api-python-client>=2.110.0",
+    "python-dotenv>=1.0.0",
+    "requests>=2.31.0",
+]
+
+[project.optional-dependencies]
+ocr = [
+    "pytesseract>=0.3.10",
+    "pdf2image>=1.17.0",
+    "Pillow>=10.0.0",
+]
+async = [
+    "aiohttp>=3.9.0",
+]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.4.0",
+    "mypy>=1.8.0",
+]
+
+[project.scripts]
+rag-pipeline = "scripts.pipeline_orchestrator:main"
+
+[project.urls]
+Repository = "https://github.com/salim-lakhal/rag-document-pipeline"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B", "SIM"]
+ignore = ["E501", "B023", "B904", "SIM102", "SIM115", "SIM117"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "integration: tests that require network access",
+]
+asyncio_mode = "auto"
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true

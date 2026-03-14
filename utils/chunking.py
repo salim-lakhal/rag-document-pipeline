@@ -6,9 +6,9 @@ preserving logical sections, and maintaining metadata about chunk positions
 and relationships.
 """
 
-import re
 import logging
-from typing import List, Dict, Optional, Any
+import re
+from typing import Any
 from uuid import uuid4
 
 # Configure logging
@@ -20,8 +20,8 @@ def chunk_text(
     text: str,
     chunk_size: int = 500,
     overlap: int = 50,
-    page_info: Optional[Dict[str, Any]] = None
-) -> List[Dict[str, Any]]:
+    page_info: dict[str, Any] | None = None
+) -> list[dict[str, Any]]:
     """
     Split text into chunks of approximately chunk_size words with overlap.
 
@@ -147,7 +147,7 @@ def chunk_text(
     return chunks
 
 
-def _split_into_sentences(text: str) -> List[str]:
+def _split_into_sentences(text: str) -> list[str]:
     """
     Split text into sentences using regex patterns.
 
@@ -178,10 +178,10 @@ def _split_into_sentences(text: str) -> List[str]:
 
 def create_chunks_with_metadata(
     text: str,
-    document_metadata: Dict[str, Any],
+    document_metadata: dict[str, Any],
     chunk_size: int = 500,
     overlap: int = 50
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """
     Create chunks with comprehensive metadata for document processing pipelines.
 
@@ -234,7 +234,7 @@ def create_chunks_with_metadata(
     if 'page_num' in document_metadata or 'page_number' in document_metadata:
         page_info = {
             'page_num': document_metadata.get('page_num') or document_metadata.get('page_number'),
-            'total_pages': document_metadata.get('total_pages', None)
+            'total_pages': document_metadata.get('total_pages')
         }
 
     # Create base chunks
@@ -286,7 +286,7 @@ def chunk_by_paragraphs(
     text: str,
     max_chunk_size: int = 500,
     min_chunk_size: int = 100
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """
     Split text into chunks based on paragraph boundaries.
 
@@ -326,16 +326,16 @@ def chunk_by_paragraphs(
         if para_word_count > max_chunk_size:
             # Save current chunk if exists
             if current_chunk_paras:
-                chunk_text = '\n\n'.join(current_chunk_paras)
+                combined_text = '\n\n'.join(current_chunk_paras)
                 chunks.append({
-                    'text': chunk_text,
+                    'text': combined_text,
                     'chunk_id': str(uuid4()),
                     'word_count': current_word_count,
-                    'char_count': len(chunk_text),
+                    'char_count': len(combined_text),
                     'start_pos': char_position,
-                    'end_pos': char_position + len(chunk_text),
+                    'end_pos': char_position + len(combined_text),
                 })
-                char_position += len(chunk_text) + 2
+                char_position += len(combined_text) + 2
                 current_chunk_paras = []
                 current_word_count = 0
 
@@ -346,16 +346,16 @@ def chunk_by_paragraphs(
 
         # If adding paragraph would exceed max_chunk_size, create chunk
         elif current_word_count + para_word_count > max_chunk_size and current_word_count >= min_chunk_size:
-            chunk_text = '\n\n'.join(current_chunk_paras)
+            combined_text = '\n\n'.join(current_chunk_paras)
             chunks.append({
-                'text': chunk_text,
+                'text': combined_text,
                 'chunk_id': str(uuid4()),
                 'word_count': current_word_count,
-                'char_count': len(chunk_text),
+                'char_count': len(combined_text),
                 'start_pos': char_position,
-                'end_pos': char_position + len(chunk_text),
+                'end_pos': char_position + len(combined_text),
             })
-            char_position += len(chunk_text) + 2
+            char_position += len(combined_text) + 2
 
             # Start new chunk with current paragraph
             current_chunk_paras = [para]
@@ -368,14 +368,14 @@ def chunk_by_paragraphs(
 
     # Handle remaining paragraphs
     if current_chunk_paras:
-        chunk_text = '\n\n'.join(current_chunk_paras)
+        combined_text = '\n\n'.join(current_chunk_paras)
         chunks.append({
-            'text': chunk_text,
+            'text': combined_text,
             'chunk_id': str(uuid4()),
             'word_count': current_word_count,
-            'char_count': len(chunk_text),
+            'char_count': len(combined_text),
             'start_pos': char_position,
-            'end_pos': char_position + len(chunk_text),
+            'end_pos': char_position + len(combined_text),
         })
 
     logger.info(f"Created {len(chunks)} paragraph-based chunks")
@@ -384,9 +384,9 @@ def chunk_by_paragraphs(
 
 
 def merge_small_chunks(
-    chunks: List[Dict[str, Any]],
+    chunks: list[dict[str, Any]],
     min_size: int = 50
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """
     Merge chunks that are smaller than min_size with adjacent chunks.
 

@@ -7,10 +7,9 @@ This module provides functionality for processing HTML documents, including:
 - Cleaning of HTML artifacts from extracted text
 """
 
-from pathlib import Path
-from typing import Dict, List, Optional
 import logging
 import re
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -53,12 +52,12 @@ def process_html(file_path: str, document_metadata: dict) -> dict:
 
         # Read the HTML file
         try:
-            with open(html_path, 'r', encoding='utf-8') as f:
+            with open(html_path, encoding='utf-8') as f:
                 html_content = f.read()
         except UnicodeDecodeError:
             # Try with different encoding
             logger.warning(f"UTF-8 decoding failed, trying latin-1 for {html_path}")
-            with open(html_path, 'r', encoding='latin-1') as f:
+            with open(html_path, encoding='latin-1') as f:
                 html_content = f.read()
 
         # Extract main content

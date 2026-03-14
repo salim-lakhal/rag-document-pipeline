@@ -16,41 +16,39 @@ This script orchestrates the entire document processing pipeline:
 3. Log all operations
 4. Support per-document processing (--document-id flag) or batch processing
 
-Author: Data Engineering Pipeline
-Date: 2025-12-12
+Supports per-document (--document-id) or batch processing of all pending docs.
 """
 
 import argparse
-import json
 import logging
 import sys
-from pathlib import Path
-from typing import Optional, Dict, List, Any
-from datetime import datetime
 import traceback
+from datetime import datetime
+from pathlib import Path
+from typing import Any
 
 # Import utility modules
 try:
-    from utils.text_cleaning import clean_text
     from utils.chunking import chunk_text_with_overlap
-    from utils.jsonl_writer import write_jsonl
     from utils.gdrive_client import download_from_drive
+    from utils.jsonl_writer import write_jsonl
     from utils.metadata_manager import MetadataManager
+    from utils.text_cleaning import clean_text
 except ImportError as e:
     # Allow script to be imported even if utilities don't exist yet
     print(f"Warning: Some utilities not yet implemented: {e}")
 
 # Import processors
 try:
-    from processors.pdf_processor import process_pdf
     from processors.html_processor import process_html
+    from processors.pdf_processor import process_pdf
     from processors.url_processor import process_url
 except ImportError as e:
     print(f"Warning: Some processors not yet implemented: {e}")
 
 
 # Configure logging
-def setup_logging(log_level: str = "INFO", log_file: Optional[str] = None) -> logging.Logger:
+def setup_logging(log_level: str = "INFO", log_file: str | None = None) -> logging.Logger:
     """
     Configure logging for the pipeline orchestrator.
 
@@ -94,10 +92,10 @@ class PipelineOrchestrator:
 
     def __init__(
         self,
-        metadata_path: str = "/home/salim/Informatique/Perso/OQTF/metadata.json",
-        jsonl_output_dir: str = "/home/salim/Informatique/Perso/OQTF/data/jsonl",
-        downloads_dir: str = "/tmp/oqtf_downloads",
-        logger: Optional[logging.Logger] = None
+        metadata_path: str = "metadata.json",
+        jsonl_output_dir: str = "data/jsonl",
+        downloads_dir: str = "/tmp/rag_pipeline_downloads",
+        logger: logging.Logger | None = None
     ):
         """
         Initialize the pipeline orchestrator.
@@ -120,12 +118,12 @@ class PipelineOrchestrator:
         # Initialize metadata manager
         self.metadata_manager = MetadataManager(self.metadata_path, logger=self.logger)
 
-        self.logger.info(f"Pipeline orchestrator initialized")
+        self.logger.info("Pipeline orchestrator initialized")
         self.logger.info(f"Metadata path: {self.metadata_path}")
         self.logger.info(f"JSONL output directory: {self.jsonl_output_dir}")
         self.logger.info(f"Downloads directory: {self.downloads_dir}")
 
-    def _detect_document_type(self, metadata: Dict[str, Any]) -> str:
+    def _detect_document_type(self, metadata: dict[str, Any]) -> str:
         """
         Detect document type from metadata.
 
@@ -151,8 +149,8 @@ class PipelineOrchestrator:
     def _download_document(
         self,
         document_id: str,
-        metadata: Dict[str, Any]
-    ) -> Optional[Path]:
+        metadata: dict[str, Any]
+    ) -> Path | None:
         """
         Download document from Google Drive if needed.
 
@@ -200,8 +198,8 @@ class PipelineOrchestrator:
     def _process_document(
         self,
         document_id: str,
-        metadata: Dict[str, Any],
-        file_path: Optional[Path]
+        metadata: dict[str, Any],
+        file_path: Path | None
     ) -> str:
         """
         Process document using appropriate processor based on type.
@@ -223,18 +221,18 @@ class PipelineOrchestrator:
 
         if doc_type == "pdf":
             if not file_path:
-                raise ValueError(f"PDF processing requires file_path")
+                raise ValueError("PDF processing requires file_path")
             raw_text = process_pdf(str(file_path), logger=self.logger)
 
         elif doc_type == "html":
             if not file_path:
-                raise ValueError(f"HTML processing requires file_path")
+                raise ValueError("HTML processing requires file_path")
             raw_text = process_html(str(file_path), logger=self.logger)
 
         elif doc_type == "url":
             source_url = metadata.get("source_url")
             if not source_url:
-                raise ValueError(f"URL processing requires source_url in metadata")
+                raise ValueError("URL processing requires source_url in metadata")
             raw_text = process_url(source_url, logger=self.logger)
 
         else:
@@ -272,8 +270,8 @@ class PipelineOrchestrator:
         self,
         cleaned_text: str,
         document_id: str,
-        metadata: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+        metadata: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """
         Chunk text with overlap and attach metadata.
 
@@ -330,7 +328,7 @@ class PipelineOrchestrator:
     def _write_jsonl(
         self,
         document_id: str,
-        chunks: List[Dict[str, Any]]
+        chunks: list[dict[str, Any]]
     ) -> Path:
         """
         Write chunks to JSONL file.
@@ -351,7 +349,7 @@ class PipelineOrchestrator:
         self.logger.info(f"Successfully wrote JSONL to {output_path}")
         return output_path
 
-    def _cleanup_downloads(self, file_path: Optional[Path]) -> None:
+    def _cleanup_downloads(self, file_path: Path | None) -> None:
         """
         Clean up temporary downloaded files.
 
@@ -455,7 +453,7 @@ class PipelineOrchestrator:
             # Clean up temporary files
             self._cleanup_downloads(file_path)
 
-    def process_pending_documents(self) -> Dict[str, Any]:
+    def process_pending_documents(self) -> dict[str, Any]:
         """
         Process all pending documents (jsonl_ready=False).
 
@@ -463,7 +461,7 @@ class PipelineOrchestrator:
             Dictionary with processing statistics
         """
         self.logger.info(f"\n{'#'*80}")
-        self.logger.info(f"Starting batch processing of pending documents")
+        self.logger.info("Starting batch processing of pending documents")
         self.logger.info(f"{'#'*80}\n")
 
         # Get pending documents
@@ -511,7 +509,7 @@ class PipelineOrchestrator:
 
         # Print summary
         self.logger.info(f"\n{'#'*80}")
-        self.logger.info(f"Batch processing completed")
+        self.logger.info("Batch processing completed")
         self.logger.info(f"{'#'*80}")
         self.logger.info(f"Total documents: {stats['total']}")
         self.logger.info(f"Succeeded: {stats['succeeded']}")
@@ -526,7 +524,7 @@ class PipelineOrchestrator:
         return stats
 
 
-def process_pipeline(document_id: Optional[str] = None) -> int:
+def process_pipeline(document_id: str | None = None) -> int:
     """
     Main pipeline processing function.
 
@@ -538,7 +536,7 @@ def process_pipeline(document_id: Optional[str] = None) -> int:
         Exit code (0 for success, 1 for failure)
     """
     # Initialize orchestrator
-    log_file = f"/home/salim/Informatique/Perso/OQTF/logs/pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+    log_file = f"logs/pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
     Path(log_file).parent.mkdir(parents=True, exist_ok=True)
 
     logger = setup_logging(log_level="INFO", log_file=log_file)
@@ -596,22 +594,22 @@ Examples:
     parser.add_argument(
         "--metadata-path",
         type=str,
-        default="/home/salim/Informatique/Perso/OQTF/metadata.json",
+        default="metadata.json",
         help="Path to metadata.json file (default: ./metadata.json)"
     )
 
     parser.add_argument(
         "--output-dir",
         type=str,
-        default="/home/salim/Informatique/Perso/OQTF/data/jsonl",
+        default="data/jsonl",
         help="Output directory for JSONL files (default: ./data/jsonl)"
     )
 
     parser.add_argument(
         "--downloads-dir",
         type=str,
-        default="/tmp/oqtf_downloads",
-        help="Temporary directory for downloads (default: /tmp/oqtf_downloads)"
+        default="/tmp/rag_pipeline_downloads",
+        help="Temporary directory for downloads"
     )
 
     parser.add_argument(
@@ -632,7 +630,7 @@ Examples:
 
     # Setup logging
     if not args.log_file:
-        log_dir = Path("/home/salim/Informatique/Perso/OQTF/logs")
+        log_dir = Path("logs")
         log_dir.mkdir(parents=True, exist_ok=True)
         args.log_file = log_dir / f"pipeline_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
 

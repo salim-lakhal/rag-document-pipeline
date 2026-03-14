@@ -7,10 +7,9 @@ This module provides functionality for processing PDF documents, including:
 - Structured output with metadata
 """
 
-from pathlib import Path
-from typing import Dict, List, Optional, Any
 import logging
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -110,7 +109,7 @@ def process_pdf(file_path: str, document_metadata: dict) -> dict:
         raise PDFProcessingError(f"Failed to process PDF: {str(e)}") from e
 
 
-def extract_text_with_pages(pdf_path: str) -> List[dict]:
+def extract_text_with_pages(pdf_path: str) -> list[dict]:
     """
     Extract text from PDF with page-level granularity using pdfplumber.
 
@@ -134,7 +133,7 @@ def extract_text_with_pages(pdf_path: str) -> List[dict]:
             "pdfplumber is not installed. Install with: pip install pdfplumber"
         )
 
-    pages_data: List[dict] = []
+    pages_data: list[dict] = []
 
     try:
         with pdfplumber.open(pdf_path) as pdf:
@@ -193,10 +192,9 @@ def ocr_pdf_if_needed(pdf_path: str) -> str:
         - Windows: Download from GitHub releases
     """
     try:
-        from pdf2image import convert_from_path
         import pytesseract
-        from PIL import Image
-    except ImportError as e:
+        from pdf2image import convert_from_path
+    except ImportError:
         logger.error(
             "OCR dependencies not installed. "
             "Install with: pip install pdf2image pytesseract pillow"
@@ -210,7 +208,7 @@ def ocr_pdf_if_needed(pdf_path: str) -> str:
         # Using lower DPI for faster processing; increase to 300 for better quality
         images = convert_from_path(pdf_path, dpi=200)
 
-        extracted_texts: List[str] = []
+        extracted_texts: list[str] = []
 
         for page_num, image in enumerate(images, start=1):
             try:

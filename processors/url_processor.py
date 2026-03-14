@@ -7,10 +7,8 @@ This module provides functionality for processing web URLs, including:
 - Robust error handling for HTTP requests
 """
 
-from typing import Dict, List, Optional
 import logging
-from urllib.parse import urlparse, urljoin
-import time
+from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
 
@@ -184,8 +182,8 @@ def _extract_with_readability(html_content: str, url: str) -> str:
         Extracted text or empty string
     """
     try:
-        from readability import Document
         from bs4 import BeautifulSoup
+        from readability import Document
     except ImportError:
         logger.warning("readability-lxml or beautifulsoup4 not installed")
         return ""
@@ -255,7 +253,7 @@ def _extract_with_beautifulsoup(html_content: str) -> str:
         return ""
 
 
-def handle_http_errors(url: str, timeout: int = 30, max_retries: int = 3) -> Optional[str]:
+def handle_http_errors(url: str, timeout: int = 30, max_retries: int = 3) -> str | None:
     """
     Fetch URL content with comprehensive error handling.
 
