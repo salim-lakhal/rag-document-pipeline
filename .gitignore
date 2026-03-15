@@ -53,3 +53,5 @@ htmlcov/
 credentials.json
 token.json
 token.pickle
+
+.claude
